@@ -10,9 +10,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
+use Illuminate\Support\Facades\Artisan;
 
 class OutsourceReceiptController extends Controller
 {
+    public function runCommand()
+    {
+        Artisan::call('outsource:process-pending', [
+            '--sync' => true
+        ]);
+
+        return back()->with('success', 'Command executed successfully!');
+    }
     // ══════════════════════════════════════════════════════════════════
     // LIST
     // ══════════════════════════════════════════════════════════════════

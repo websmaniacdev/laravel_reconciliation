@@ -180,10 +180,16 @@
                         </svg>
                         Pending / Failed PDFs
                     </h2>
-                    <span class="text-xs text-gray-400">
+                    {{-- <span class="text-xs text-gray-400">
                         Run: <code class="bg-gray-100 px-2 py-0.5 rounded font-mono">php artisan
                             bankstmt:process-pending --sync</code>
-                    </span>
+                    </span> --}}
+                    <button
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                        <a href="{{ route('bankstatements.run') }}" class="btn btn-primary">
+                            Run Credit Card Process
+                        </a>
+                    </button>
                 </div>
                 <div class="divide-y divide-gray-50">
                     @foreach ($pendingPdfs as $pending)

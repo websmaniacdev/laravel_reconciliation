@@ -11,9 +11,19 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\InvoiceRecordsExport;
+use Illuminate\Support\Facades\Artisan;
 
 class InvoiceController extends Controller
 {
+
+    public function runCommand()
+    {
+        Artisan::call('invoice:process-pending', [
+            '--sync' => true
+        ]);
+
+        return back()->with('success', 'Command executed successfully!');
+    }
     // ══════════════════════════════════════════════════════════════════
     // LIST
     // ══════════════════════════════════════════════════════════════════

@@ -10,9 +10,18 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\HostingerInvoiceRecordsExport;
+use Illuminate\Support\Facades\Artisan;
 
 class HostingerInvoiceController extends Controller
 {
+    public function runCommand()
+    {
+        Artisan::call('hostinger:process-pending', [
+            '--sync' => true
+        ]);
+
+        return back()->with('success', 'Command executed successfully!');
+    }
     // ══════════════════════════════════════════════════════════════════
     // LIST
     // ══════════════════════════════════════════════════════════════════
@@ -35,7 +44,9 @@ class HostingerInvoiceController extends Controller
         if ($request->filled('description')) {
             $query->where('description', 'like', '%' . $request->description . '%');
         }
-
+        if ($request->filled('type')) {
+            $query->where('type', $request->type);
+        }
         if ($request->filled('from_date')) {
             $query->whereDate('invoice_date', '>=', $request->from_date);
         }
@@ -144,6 +155,7 @@ class HostingerInvoiceController extends Controller
             'invoice_number' => $request->get('invoice_number'),
             'billed_to'      => $request->get('billed_to'),
             'description'    => $request->get('description'),
+            'type'           => $request->get('type'),          // ← was missing
             'from_date'      => $request->get('from_date'),
             'to_date'        => $request->get('to_date'),
         ];
@@ -183,5 +195,22 @@ class HostingerInvoiceController extends Controller
         ProcessHostingerInvoicePdf::dispatch($pending->id);
 
         return response()->json(['success' => true]);
+    }
+    public function updateClientName(Request $request, $id)
+    {
+        $record = HostingerInvoiceRecord::findOrFail($id);
+
+        $validated = $request->validate([
+            'client_name' => 'nullable|string|max:255'
+        ]);
+
+        $record->update([
+            'client_name' => $validated['client_name'] ?? null
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Client name updated successfully'
+        ]);
     }
 }

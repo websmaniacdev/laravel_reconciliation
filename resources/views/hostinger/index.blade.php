@@ -87,10 +87,20 @@
                             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-violet-500 outline-none">
                     </div>
                     <div>
-                        <label class="block text-xs font-medium text-gray-500 mb-1">Description</label>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Description/Client</label>
                         <input type="text" name="description" value="{{ request('description') }}"
                             placeholder="WordPress, .IN Domain..."
                             class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-violet-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Type</label>
+                        <select name="type"
+                            class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-violet-500 outline-none">
+                            <option value="">All Types</option>
+                            <option value="Domain" {{ request('type') === 'Domain' ? 'selected' : '' }}>Domain</option>
+                            <option value="Hosting" {{ request('type') === 'Hosting' ? 'selected' : '' }}>Hosting
+                            </option>
+                        </select>
                     </div>
                     <div>
                         <label class="block text-xs font-medium text-gray-500 mb-1">From Date</label>
@@ -203,7 +213,7 @@
         {{-- Active filters display --}}
         @if (request()->hasAny(['invoice_number', 'billed_to', 'description', 'from_date', 'to_date']))
             <div class="flex flex-wrap gap-2 mb-4">
-                @foreach (['invoice_number' => 'Invoice #', 'billed_to' => 'Billed To', 'description' => 'Description'] as $key => $label)
+                @foreach (['invoice_number' => 'Invoice #', 'billed_to' => 'Billed To', 'description' => 'Description/Client'] as $key => $label)
                     @if (request($key))
                         <span
                             class="inline-flex items-center gap-1 bg-violet-50 border border-violet-200 text-violet-700 text-xs px-2.5 py-1 rounded-full">
@@ -246,6 +256,12 @@
                         Run: <code class="bg-gray-100 px-2 py-0.5 rounded font-mono">php artisan
                             hostinger:process-pending --sync</code>
                     </span>
+                    <button
+                        class="bg-violet-600 hover:bg-violet-700 text-white px-3 py-2 rounded-lg text-sm font-medium">
+                        <a href="{{ route('hostinger.invoices.run') }}" class="btn btn-primary">
+                            Run Hostinger Process
+                        </a>
+                    </button>
                 </div>
                 <div class="divide-y divide-gray-50">
                     @foreach ($pendingPdfs as $pending)
@@ -312,6 +328,12 @@
                                 Description</th>
                             <th
                                 class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Client Name</th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                Type</th>
+                            <th
+                                class="px-4 py-3 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
                                 Billing Period</th>
                             <th
                                 class="px-4 py-3 text-right text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -365,6 +387,23 @@
                                 <td class="px-4 py-3 max-w-xs">
                                     <p class="text-xs text-gray-700 truncate" title="{{ $record->description }}">
                                         {{ $record->description }}</p>
+                                </td>
+                                <td class="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">
+                                    @if ($record->client_name)
+                                        <span
+                                            class="inline-block px-2 py-1 bg-gray-100 rounded cursor-pointer hover:bg-amber-100 transition"
+                                            onclick="editClientName({{ $record->id }}, '{{ $record->client_name }}', this)">
+                                            {{ $record->client_name }}
+                                        </span>
+                                    @else
+                                        <span class="text-gray-400 italic text-xs cursor-pointer hover:text-gray-600"
+                                            onclick="editClientName({{ $record->id }}, '', this)">
+                                            — (click to add)
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-4 py-3 text-gray-600 text-xs whitespace-nowrap">
+                                    {{ $record->type ?? '—' }}
                                 </td>
                                 <td class="px-4 py-3 text-gray-400 text-xs whitespace-nowrap">
                                     {{ $record->billing_period ?? '—' }}
@@ -753,6 +792,54 @@
                 if (d.success) location.reload();
                 else alert('Remove failed.');
             });
+        }
+
+        // Edit Client Name Inline
+        let currentEditingCell = null;
+
+        function editClientName(recordId, currentName, element) {
+            const newName = prompt("Enter Client Name:", currentName || "");
+
+            if (newName === null) return; // Cancel pressed
+
+            const trimmedName = newName.trim();
+
+            if (trimmedName === currentName) return; // No change
+
+            fetch(`/hostinger-invoices/${recordId}/client-name`, {
+                    method: 'PATCH',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        client_name: trimmedName
+                    })
+                })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.success) {
+                        // Update UI
+                        if (trimmedName === '') {
+                            element.outerHTML = `
+                            <span class="text-gray-400 italic text-xs cursor-pointer hover:text-gray-600"
+                                  onclick="editClientName(${recordId}, '', this)">
+                                — (click to add)
+                            </span>`;
+                        } else {
+                            element.textContent = trimmedName;
+                            element.classList.remove('bg-amber-100');
+                            element.classList.add('bg-gray-100');
+                        }
+                        alert('Client name updated successfully!');
+                    } else {
+                        alert('Failed to update: ' + (data.message || ''));
+                    }
+                })
+                .catch(err => {
+                    alert('Error updating client name.');
+                });
         }
     </script>
 </body>

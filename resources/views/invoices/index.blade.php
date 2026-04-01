@@ -216,9 +216,14 @@
                         </svg>
                         Pending / Failed PDFs
                     </h2>
-                    <span class="text-xs text-gray-400">Run: <code
+                    {{-- <span class="text-xs text-gray-400">Run: <code
                             class="bg-gray-100 px-2 py-0.5 rounded font-mono">php artisan invoice:process-pending
-                            --sync</code></span>
+                            --sync</code></span> --}}
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                        <a href="{{ route('invoices.run') }}" class="btn btn-primary">
+                            Run Invoice Meta Process
+                        </a>
+                    </button>
                 </div>
                 <div class="divide-y divide-gray-50">
                     @foreach ($pendingPdfs as $pending)

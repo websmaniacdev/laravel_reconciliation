@@ -6,29 +6,6 @@ use Smalot\PdfParser\Parser;
 
 class MetaInvoicePdfParser
 {
-    /**
-     * Parse a Meta Ads tax invoice PDF.
-     *
-     * PDF mein teen types ke records hote hain:
-     *
-     * TYPE A — "Client - Name" format:
-     *   "2 Client - Move Maker Rehabilitation (22-12-2025)"
-     *   "From 14 Feb 2026, ..."
-     *   "Traffic Ads for Clients (22-12-2025) 1 Impression 0.01 INR"
-     *
-     * TYPE B — Direct campaign name (no "Client -" prefix):
-     *   "1 Just smile - leads - 14/2/26 to 28/2/26 – other 4 creative"
-     *   "From 14 Feb 2026, ..."
-     *   "Just smile - leads - 14/2/26 to 28/2/26 – other 4 creative 1 Impression 0.04 INR"
-     *
-     * TYPE C — Short brand name:
-     *   "3 Cannoli The Cafe - Awareness - 9/2/26 to 15/2/26"
-     *   "From 14 Feb 2026, ..."
-     *   "Cannoli The Cafe - Awareness - 9/2/26 to 15/2/26 2 Impressions 0.01 INR"
-     *
-     * FIX: Pehle sirf "Client -" wale records parse hote the.
-     *      Ab KISI BHI "N <text>" line ko record maana jata hai.
-     */
     public function parse(string $pdfPath, string $originalFilename): array
     {
         $parser = new Parser();
@@ -52,7 +29,7 @@ class MetaInvoicePdfParser
         $rawLines = array_values(array_filter($rawLines, fn($l) => $l !== ''));
 
         // ── Pre-process: merge lone line numbers with next line
-        // Smalot kabhi kabhi "1\nJust smile..." split kar deta hai
+        // Smalot kabhi kabhi "1\nJust smile..." split
         $lines = [];
         $count = count($rawLines);
         $i     = 0;
@@ -75,7 +52,7 @@ class MetaInvoicePdfParser
             $i++;
         }
 
-        // ── "Line no." section dhundho ────────────────────────────────
+        // ── "Line no." section  ────────────────────────────────
         $lineCount = count($lines);
         $j         = 0;
 
@@ -93,8 +70,8 @@ class MetaInvoicePdfParser
         while ($j < $lineCount) {
             $line = $lines[$j];
 
-            // Naya record: "1 <kuch bhi meaningful>" se shuru ho
-            // Condition: line number (1-2 digit) + space + kam se kam 3 chars
+            // Naya record: "1 <kuch bhi meaningful>"
+            // Condition: line number (1-2 digit) + space +
             if (preg_match('/^(\d{1,2})\s+(.{3,})$/', $line, $match)) {
 
                 $lineNo  = (int) $match[1];
@@ -103,7 +80,6 @@ class MetaInvoicePdfParser
                 // ── Client name extract karo ──────────────────────────
                 $clientName = $this->extractClientName($rawHead);
 
-                // Agar name bahut chota ya sirf numbers/gibberish ho toh skip
                 if (mb_strlen($clientName) < 3) {
                     $j++;
                     continue;
@@ -115,7 +91,6 @@ class MetaInvoicePdfParser
                 $totalImpressions = 0;
                 $campaignTypes    = [];
 
-                // Is record ke saare sub-lines padhna
                 while ($j < $lineCount) {
                     $current = $lines[$j];
 
@@ -130,7 +105,7 @@ class MetaInvoicePdfParser
                         continue;
                     }
 
-                    // Sirf price line jaise "0.04 INR" — skip (header price)
+                    //  price line jaise "0.04 INR" — skip (header price)
                     if (preg_match('/^[\d,]+\.\d{2}\s+INR\s*$/i', $current)) {
                         $j++;
                         continue;
@@ -145,7 +120,7 @@ class MetaInvoicePdfParser
                         $totalPrice       += $price;
                         $totalImpressions += $impressions;
 
-                        // Campaign name: impressions ke pehle wala hissa
+                        // Campaign name: impressions
                         $campName = preg_replace('/\s*[\d,]+\s+Impressions?.*$/i', '', $current);
                         $campName = $this->cleanCampaignName($campName);
 
@@ -160,7 +135,7 @@ class MetaInvoicePdfParser
                     $j++;
                 }
 
-                // Record save karo agar price mili
+                // Record  price avalable
                 if ($totalPrice > 0) {
                     $combinedCampaign = !empty($campaignTypes)
                         ? implode(' + ', $campaignTypes)
@@ -199,51 +174,25 @@ class MetaInvoicePdfParser
     // Private helpers
     // ─────────────────────────────────────────────────────────────────
 
-    /**
-     * Record heading line se client/campaign name nikalo.
-     *
-     * Cases:
-     *   "Client - Move Maker Rehabilitation (22-12-2025)"  → "Move Maker Rehabilitation"
-     *   "Just smile - leads - 14/2/26 to 28/2/26 – ..."   → "Just smile"
-     *   "Cannoli The Cafe - Awareness - 9/2/26 to 15/2/26" → "Cannoli The Cafe"
-     *   "Phoenix - 11/2/26 to 20/2/26 - Awareness"        → "Phoenix"
-     *   "Rio Pipes - Leads - Dealer Distributor - 12-02-26"→ "Rio Pipes"
-     *   "Client - Weldor CNC Machine (03-11-2025)"         → "Weldor CNC Machine"
-     */
     private function extractClientName(string $raw): string
     {
-        // Step 1: "Client - " prefix hata do
         $name = preg_replace('/^Client\s*-\s*/i', '', $raw);
-
-        // Step 2: Trailing parentheses hata do: (22-12-2025) or (B2B Customer)
         $name = preg_replace('/\s*\([^)]*\)\s*$/', '', $name);
-
-        // Step 3: "to" keyword ke baad date range hata do
-        // "Just smile - leads - 14/2/26 to 28/2/26 – other 4 creative"
-        //                      → "Just smile - leads"
         $name = preg_replace('/\s*[\–\-]?\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}\s+to\s+.*/iu', '', $name);
 
-        // Step 4: Slash-date pattern ke baad sab kuch hata do
-        // "Cannoli The Cafe - Awareness - 9/2/26 to..." already handled
-        // "Rio Pipes - Leads - Dealer Distributor - 12-02-26"
-        //                     → cut at " - 12-02-26"
+
         $name = preg_replace(
             '/\s*-\s*\d{1,2}[\/\-]\d{1,2}[\/\-]\d{2,4}.*/i',
             '',
             $name
         );
 
-        // Step 5: Month-name date pattern hata do
         $name = preg_replace(
             '/\s*-\s*(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b.*/i',
             '',
             $name
         );
 
-        // Step 6: Common trailing keywords hata do
-        // "Just smile - leads" → trailing " - leads" rakhna chahte hain? Nahi,
-        // kyuki yeh campaign type hai, client name nahi.
-        // Lekin sirf tab hata do jab yeh puri string ke end mein ho.
         $trailingKeywords = 'Leads?|Awareness|Traffic|Engagement|Lifetime|Impressions?'
             . '|Rajkot|Ahmedabad|Mumbai|Delhi|Surat|Vadodara|Dealer|Distributor'
             . '|creative|other\s+\d+\s+creative';
@@ -302,7 +251,7 @@ class MetaInvoicePdfParser
 
             if (mb_strlen($clientName) < 3) continue;
 
-            // Agla header ki position dhundho
+            // header position
             $startPos = $hm[0][1] + strlen($hm[0][0]);
             $endPos   = isset($headerMatches[$idx + 1])
                 ? $headerMatches[$idx + 1][0][1]

@@ -30,6 +30,8 @@ class HostingerInvoiceRecord extends Model
         'gst_amount',
         'line_total',
         'currency',
+        'client_name',
+        'type'
     ];
 
     protected $casts = [

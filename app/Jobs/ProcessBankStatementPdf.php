@@ -51,10 +51,12 @@ class ProcessBankStatementPdf implements ShouldQueue
                 $pdf->password ?: null
             );
 
+
             if (empty($records)) {
-                throw new \RuntimeException(
-                    "Parser returned 0 records. PDF format unsupported or no transactions found."
-                );
+                echo $parser->getRawText($fullPath);
+                // throw new \RuntimeException(
+                //     "Parser returned 0 records. PDF format unsupported or no transactions found."
+                // );
             }
 
             DB::transaction(function () use ($records, $pdf) {

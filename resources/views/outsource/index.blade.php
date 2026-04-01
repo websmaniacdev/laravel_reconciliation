@@ -230,9 +230,15 @@
                         </svg>
                         Pending / Failed PDFs
                     </h2>
-                    <span class="text-xs text-gray-400">Run: <code
+                    {{-- <span class="text-xs text-gray-400">Run: <code
                             class="bg-gray-100 px-2 py-0.5 rounded font-mono">php artisan outsource:process-pending
-                            --sync</code></span>
+                            --sync</code></span> --}}
+                    <button
+                        class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-mediumm">
+                        <a href="{{ route('outsource.run') }}" class="btn btn-primary">
+                            Run Gsuite Process
+                        </a>
+                    </button>
                 </div>
                 <div class="divide-y divide-gray-50">
                     @foreach ($pendingPdfs as $pending)
