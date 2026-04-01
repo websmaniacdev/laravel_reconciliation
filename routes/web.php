@@ -3,6 +3,7 @@
 use App\Http\Controllers\InvoiceController;
 use App\Http\Controllers\OutsourceReceiptController;
 use App\Http\Controllers\HostingerInvoiceController;
+use App\Http\Controllers\BankStatementController;
 use Illuminate\Support\Facades\Route;
 
 // ── Invoice Records ───────────────────────────────────────────────────
@@ -42,4 +43,15 @@ Route::prefix('hostinger-invoices')->name('hostinger.invoices.')->group(function
     // Pending PDF actions
     Route::delete('/pending/{pending}',                [HostingerInvoiceController::class, 'destroyPending'])->name('pending.destroy');
     Route::post('/pending/{pending}/retry',            [HostingerInvoiceController::class, 'retryPending'])->name('pending.retry');
+});
+
+Route::prefix('bankstatements')->name('bankstatements.')->group(function () {
+    Route::get('/',                         [BankStatementController::class, 'index'])->name('index');
+    Route::post('/upload',                  [BankStatementController::class, 'upload'])->name('upload');
+    Route::get('/export',                   [BankStatementController::class, 'export'])->name('export');
+    Route::post('/merge',                   [BankStatementController::class, 'merge'])->name('merge');
+    Route::post('/merge-by-month',          [BankStatementController::class, 'mergeByMonth'])->name('mergeByMonth');
+    Route::delete('/{transaction}',         [BankStatementController::class, 'destroy'])->name('destroy');
+    Route::delete('/pending/{pending}',     [BankStatementController::class, 'destroyPending'])->name('destroyPending');
+    Route::post('/pending/{pending}/retry', [BankStatementController::class, 'retryPending'])->name('retryPending');
 });
