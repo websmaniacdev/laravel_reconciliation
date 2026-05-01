@@ -491,8 +491,8 @@
 
                 <div class="mt-3 bg-indigo-50 border border-indigo-100 rounded-lg px-4 py-3">
                     <p class="text-xs text-indigo-700">
-                        🔒 Password-protected PDFs automatically decrypt kar liye jaate hain.<br>
-                        📋 PDFs queued honge. Run:
+                        🔒 Password-protected PDFs<br>
+                        📋 PDFs queued. Run:
                         <code class="font-mono bg-indigo-100 px-1 py-0.5 rounded">php artisan bankstmt:process-pending
                             --sync</code>
                     </p>
