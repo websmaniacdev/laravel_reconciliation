@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Apr 01, 2026 at 02:32 PM
+-- Generation Time: May 02, 2026 at 09:12 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.2.12
 
@@ -1639,7 +1639,9 @@ CREATE TABLE `sessions` (
 --
 
 INSERT INTO `sessions` (`id`, `user_id`, `ip_address`, `user_agent`, `payload`, `last_activity`) VALUES
-('bY5Re0QgXHJnMRojtNj4Ui5TX8PMTY5GKkl1LISo', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiV1loMjlheDZVRmFkTGhuRTZxbXh3MmF1UUNhR1MwQ2JwZ0lJVnVNRiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MzY6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9nb2RhZGR5L2V4cG9ydCI7czo1OiJyb3V0ZSI7czoxNDoiZ29kYWRkeS5leHBvcnQiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1775046444);
+('4A2m3UMcLatWlF7AZM1YJhscOoKUmFoSmB45b15A', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiT3h2ZHU5QnFWUjNaaTdOYmVVRUU1SnlvMjNQZ0kxS2RjWUFVeHB2WCI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6Mjk6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9nb2RhZGR5IjtzOjU6InJvdXRlIjtzOjEzOiJnb2RhZGR5LmluZGV4Ijt9czo2OiJfZmxhc2giO2E6Mjp7czozOiJvbGQiO2E6MDp7fXM6MzoibmV3IjthOjA6e319fQ==', 1777625396),
+('bY5Re0QgXHJnMRojtNj4Ui5TX8PMTY5GKkl1LISo', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiV1loMjlheDZVRmFkTGhuRTZxbXh3MmF1UUNhR1MwQ2JwZ0lJVnVNRiI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MzY6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9nb2RhZGR5L2V4cG9ydCI7czo1OiJyb3V0ZSI7czoxNDoiZ29kYWRkeS5leHBvcnQiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1775046444),
+('hOo1A21fBzqK88wREVPb0zzUjWWiur8ltUSqrYqP', NULL, '127.0.0.1', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/146.0.0.0 Safari/537.36', 'YTozOntzOjY6Il90b2tlbiI7czo0MDoiVGg5dTZqMlB2aGxhdlFEYUo0djdtMjBZM3FXQkpybVpBZExXYUlVciI7czo5OiJfcHJldmlvdXMiO2E6Mjp7czozOiJ1cmwiO3M6MzA6Imh0dHA6Ly8xMjcuMC4wLjE6ODAwMC9pbnZvaWNlcyI7czo1OiJyb3V0ZSI7czoxNDoiaW52b2ljZXMuaW5kZXgiO31zOjY6Il9mbGFzaCI7YToyOntzOjM6Im9sZCI7YTowOnt9czozOiJuZXciO2E6MDp7fX19', 1775101671);
 
 -- --------------------------------------------------------
 
