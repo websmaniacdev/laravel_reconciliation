@@ -19,31 +19,8 @@
 
     {{-- ══════════════════ HEADER ══════════════════ --}}
     <header class="bg-white shadow-sm border-b">
-        <div class="flex items-center justify-between h-16">
-            <!-- Navigation -->
-            <nav class="hidden md:flex items-center space-x-6 text-sm font-medium">
-
-                <a href="{{ route('invoices.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    Invoices
-                </a>
-
-                <a href="{{ route('outsource.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    Gsuite
-                </a>
-
-                <a href="{{ route('hostinger.invoices.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    Hostinger
-                </a>
-
-                <a href="{{ route('bankstatements.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    Bank Statements
-                </a>
-
-                <a href="{{ route('godaddy.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    GoDaddy
-                </a>
-
-            </nav>
+        <div class="flex items-center justify-between h-16 max-w-7xl mx-auto px-4">
+            @include('layouts.nav')
         </div>
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">

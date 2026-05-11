@@ -23,31 +23,8 @@
 
     {{-- ══════════════════ HEADER ══════════════════ --}}
     <header class="bg-white shadow-sm border-b">
-        <div class="flex items-center justify-between h-16">
-            <!-- Navigation -->
-            <nav class="hidden md:flex items-center space-x-6 text-sm font-medium">
-
-                <a href="{{ route('invoices.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    Invoices
-                </a>
-
-                <a href="{{ route('outsource.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    Gsuite
-                </a>
-
-                <a href="{{ route('hostinger.invoices.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    Hostinger
-                </a>
-
-                <a href="{{ route('bankstatements.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    Bank Statements
-                </a>
-
-                <a href="{{ route('godaddy.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    GoDaddy
-                </a>
-
-            </nav>
+        <div class="flex items-center justify-between h-16 max-w-7xl mx-auto px-4">
+            @include('layouts.nav')
         </div>
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -62,14 +39,25 @@
                     <p class="text-xs text-gray-400">Google Workspace & Other Subscriptions</p>
                 </div>
             </div>
-            <button @click="showUpload = true"
-                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                Upload PDF(s)
-            </button>
+            <div class="flex gap-2">
+                <button @click="showSalesBillUpload = true"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Upload Sales Bill PDF(s)
+                </button>
+                <button @click="showUpload = true"
+                    class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Upload PDF(s)
+                </button>
+            </div>
+
         </div>
     </header>
 
@@ -218,6 +206,746 @@
                 </div>
             @endif
         </div>
+
+        {{-- ── Comparison Summary Card ── --}}
+        @if ($matchedCount > 0 || $salesBills->count() > 0)
+            <div
+                class="mb-5 bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl shadow-sm px-5 py-4 border border-emerald-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-emerald-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">Gsuite Receipts vs Your Sales Bills — 6-Month
+                                Period Comparison</h3>
+                            <p class="text-xs text-gray-500">
+                                {{ $matchedCount }} client-period(s) matched &nbsp;•&nbsp;
+                                {{ $salesBills->count() }} sales bill(s) uploaded
+                            </p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-500">Total Sales Bills Amount</p>
+                        <p class="text-xl font-bold text-emerald-700">₹ {{ number_format($salesBillsTotal, 2) }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        {{-- ── 6-Month Period + Client Wise Comparison ── --}}
+        @if (count($groupedData) > 0)
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        6-Month Period & Client Wise Comparison
+                    </h2>
+                    <span class="text-xs text-gray-400">
+                        {{ count($groupedData) }} period(s)
+                    </span>
+                </div>
+
+                <div class="space-y-4">
+                    @foreach ($groupedData as $periodKey => $clients)
+                        @php
+                            // Get period label from first client that has it
+                            $periodLabel = 'Unknown Period';
+                            foreach ($clients as $cKey => $cData) {
+                                if (!empty($cData['period_label'])) {
+                                    $periodLabel = $cData['period_label'];
+                                    break;
+                                }
+                            }
+
+                            // Remove helper key if present
+                            $clientsFiltered = collect($clients)->except('period_label')->toArray();
+
+                            $periodReceiptTotal = collect($clientsFiltered)->sum(
+                                fn($c) => collect($c['receipts'])->sum('grand_total'),
+                            );
+                            $periodSalesBillTotal = collect($clientsFiltered)->sum(
+                                fn($c) => collect($c['sales_bills'])->sum('total_amount'),
+                            );
+                        @endphp
+
+                        <div class="bg-white rounded-xl shadow-sm overflow-hidden" x-data="{ periodOpen: true }">
+
+                            {{-- Period Header --}}
+                            <div class="px-5 py-3 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100 flex items-center justify-between cursor-pointer hover:bg-indigo-100 transition"
+                                @click="periodOpen = !periodOpen">
+                                <div class="flex items-center gap-3">
+                                    <svg :class="{ 'rotate-90': periodOpen }"
+                                        class="w-4 h-4 text-indigo-500 transition-transform" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7" />
+                                    </svg>
+                                    <div>
+                                        <h3 class="text-base font-bold text-gray-800">{{ $periodLabel }}</h3>
+                                        <span class="text-xs text-indigo-500">6-Month Period</span>
+                                    </div>
+                                    <span class="text-xs bg-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full">
+                                        {{ count($clientsFiltered) }} client(s)
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-4 text-xs">
+                                    <span class="text-indigo-600 font-medium">Gsuite: ₹
+                                        {{ number_format($periodReceiptTotal, 2) }}</span>
+                                    <span class="text-emerald-600 font-medium">Sales Bills: ₹
+                                        {{ number_format($periodSalesBillTotal, 2) }}</span>
+                                    @if (abs($periodReceiptTotal - $periodSalesBillTotal) > 1)
+                                        <span class="text-red-500 font-medium">
+                                            ⚠️ Diff: ₹
+                                            {{ number_format(abs($periodReceiptTotal - $periodSalesBillTotal), 2) }}
+                                        </span>
+                                    @else
+                                        <span class="text-green-600 font-medium">✅ Matched</span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Clients inside this Period --}}
+                            <div x-show="periodOpen" x-collapse class="divide-y divide-gray-100">
+                                @foreach ($clientsFiltered as $clientName => $data)
+                                    @php
+                                        $hasReceipts = !empty($data['receipts']);
+                                        $hasSalesBills = !empty($data['sales_bills']);
+                                        $isMatched = $hasReceipts && $hasSalesBills;
+
+                                        $receiptTotal = collect($data['receipts'])->sum('grand_total');
+                                        $salesBillTotal = collect($data['sales_bills'])->sum('total_amount');
+                                        $amountDiff = abs($receiptTotal - $salesBillTotal);
+                                        $isAmountMatch = $amountDiff <= 1;
+                                    @endphp
+
+                                    <div class="px-5 py-3 hover:bg-gray-50 transition" x-data="{ clientOpen: false }">
+
+                                        {{-- Client Row --}}
+                                        <div class="flex items-center justify-between cursor-pointer"
+                                            @click="clientOpen = !clientOpen">
+                                            <div class="flex items-center gap-3">
+                                                <svg :class="{ 'rotate-90': clientOpen }"
+                                                    class="w-3 h-3 text-gray-400 transition-transform" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                                <div>
+                                                    <h4 class="font-semibold text-gray-800">{{ $clientName }}</h4>
+                                                    <div class="flex items-center gap-2 mt-0.5">
+                                                        @if ($isMatched)
+                                                            <span
+                                                                class="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                                                <svg class="w-3 h-3" fill="currentColor"
+                                                                    viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd"
+                                                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                                                                </svg>
+                                                                Matched
+                                                            </span>
+                                                            @if ($isAmountMatch)
+                                                                <span
+                                                                    class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✅
+                                                                    Amount matches</span>
+                                                            @else
+                                                                <span
+                                                                    class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">⚠️
+                                                                    Mismatch: ₹
+                                                                    {{ number_format($amountDiff, 2) }}</span>
+                                                            @endif
+                                                        @elseif ($hasReceipts && !$hasSalesBills)
+                                                            <span
+                                                                class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">⚠️
+                                                                Missing Sales Bill</span>
+                                                        @elseif (!$hasReceipts && $hasSalesBills)
+                                                            <span
+                                                                class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">📋
+                                                                Only in Sales Bills</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-4 text-sm">
+                                                <span class="text-indigo-600">Gsuite: ₹
+                                                    {{ number_format($receiptTotal, 2) }}</span>
+                                                <span class="text-emerald-600">Sales Bill: ₹
+                                                    {{ number_format($salesBillTotal, 2) }}</span>
+                                            </div>
+                                        </div>
+
+                                        {{-- Client Detail Tables --}}
+                                        <div x-show="clientOpen" x-collapse class="mt-3 pl-6">
+                                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+                                                {{-- Gsuite Receipts --}}
+                                                <div class="bg-indigo-50/30 rounded-lg overflow-hidden">
+                                                    <div class="px-3 py-2 bg-indigo-100 border-b border-indigo-200">
+                                                        <h5 class="text-sm font-semibold text-indigo-800">
+                                                            🖥 Gsuite Receipts ({{ count($data['receipts']) }})
+                                                        </h5>
+                                                    </div>
+                                                    <div class="overflow-x-auto">
+                                                        <table class="w-full text-xs">
+                                                            <thead class="bg-indigo-100/50">
+                                                                <tr>
+                                                                    <th class="px-3 py-2 text-left">Invoice #</th>
+                                                                    <th class="px-3 py-2 text-left">Date</th>
+                                                                    <th class="px-3 py-2 text-left">Subscription</th>
+                                                                    <th class="px-3 py-2 text-right">Subtotal</th>
+                                                                    <th class="px-3 py-2 text-right">GST</th>
+                                                                    <th class="px-3 py-2 text-right">Total</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody class="divide-y divide-indigo-100">
+                                                                @foreach ($data['receipts'] as $receipt)
+                                                                    <tr class="hover:bg-indigo-50">
+                                                                        <td class="px-3 py-2 font-mono">
+                                                                            {{ $receipt->invoice_number ?? '—' }}</td>
+                                                                        <td class="px-3 py-2 whitespace-nowrap">
+                                                                            {{ $receipt->invoice_date?->format('d M Y') ?? '—' }}
+                                                                        </td>
+                                                                        <td class="px-3 py-2 max-w-xs truncate"
+                                                                            title="{{ $receipt->subscription }}">
+                                                                            {{ $receipt->subscription ?? ($receipt->description ?? '—') }}
+                                                                        </td>
+                                                                        <td class="px-3 py-2 text-right">₹
+                                                                            {{ number_format($receipt->subtotal, 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right text-orange-600">
+                                                                            ₹
+                                                                            {{ number_format($receipt->gst_amount, 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right font-semibold text-indigo-700">
+                                                                            ₹
+                                                                            {{ number_format($receipt->grand_total, 2) }}
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                            @if (count($data['receipts']) > 1)
+                                                                <tfoot>
+                                                                    <tr class="bg-indigo-100 font-bold">
+                                                                        <td colspan="3"
+                                                                            class="px-3 py-2 text-right">Total:</td>
+                                                                        <td class="px-3 py-2 text-right">₹
+                                                                            {{ number_format(collect($data['receipts'])->sum('subtotal'), 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right text-orange-600">
+                                                                            ₹
+                                                                            {{ number_format(collect($data['receipts'])->sum('gst_amount'), 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right text-indigo-700">
+                                                                            ₹ {{ number_format($receiptTotal, 2) }}
+                                                                        </td>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            @endif
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Your Sales Bills --}}
+                                                <div class="bg-emerald-50/30 rounded-lg overflow-hidden">
+                                                    <div class="px-3 py-2 bg-emerald-100 border-b border-emerald-200">
+                                                        <h5 class="text-sm font-semibold text-emerald-800">
+                                                            🧾 Your Sales Bills ({{ count($data['sales_bills']) }})
+                                                        </h5>
+                                                    </div>
+                                                    <div class="overflow-x-auto">
+                                                        <table class="w-full text-xs">
+                                                            <thead class="bg-emerald-100/50">
+                                                                <tr>
+                                                                    <th class="px-3 py-2 text-left">Invoice #</th>
+                                                                    <th class="px-3 py-2 text-left">Date</th>
+                                                                    <th class="px-3 py-2 text-left">Period</th>
+                                                                    <th class="px-3 py-2 text-left">Description</th>
+                                                                    <th class="px-3 py-2 text-right">Before Tax</th>
+                                                                    <th class="px-3 py-2 text-right">GST</th>
+                                                                    <th class="px-3 py-2 text-right">Total</th>
+                                                                    <th class="px-3 py-2 text-center">Act</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody class="divide-y divide-emerald-100">
+                                                                @foreach ($data['sales_bills'] as $bill)
+                                                                    <tr class="hover:bg-emerald-50">
+                                                                        <td class="px-3 py-2 font-mono">
+                                                                            {{ $bill->invoice_number ?? '—' }}</td>
+                                                                        <td class="px-3 py-2 whitespace-nowrap">
+                                                                            {{ $bill->invoice_date?->format('d M Y') ?? '—' }}
+                                                                        </td>
+                                                                        <td class="px-3 py-2 whitespace-nowrap">
+                                                                            @if ($bill->period_label)
+                                                                                <span
+                                                                                    class="inline-block bg-emerald-100 text-emerald-700 text-xs px-1.5 py-0.5 rounded">
+                                                                                    {{ $bill->period_label }}
+                                                                                </span>
+                                                                            @else
+                                                                                <span class="text-gray-400">—</span>
+                                                                            @endif
+                                                                        </td>
+                                                                        <td class="px-3 py-2 max-w-xs truncate"
+                                                                            title="{{ $bill->description }}">
+                                                                            {{ $bill->description ?? ($bill->particulars ?? '—') }}
+                                                                        </td>
+                                                                        <td class="px-3 py-2 text-right">₹
+                                                                            {{ number_format($bill->amount_before_tax, 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right text-orange-600">
+                                                                            ₹
+                                                                            {{ number_format($bill->sgst_amount + $bill->cgst_amount + $bill->igst_amount, 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right font-semibold text-emerald-700">
+                                                                            ₹
+                                                                            {{ number_format($bill->total_amount, 2) }}
+                                                                        </td>
+                                                                        <td class="px-3 py-2 text-center">
+                                                                            <button
+                                                                                onclick="deleteSalesBill({{ $bill->id }})"
+                                                                                class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition"
+                                                                                title="Delete">
+                                                                                <svg class="w-3 h-3" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        stroke-width="2"
+                                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                                </svg>
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                            @if (count($data['sales_bills']) > 1)
+                                                                <tfoot>
+                                                                    <tr class="bg-emerald-100 font-bold">
+                                                                        <td colspan="4"
+                                                                            class="px-3 py-2 text-right">Total:</td>
+                                                                        <td class="px-3 py-2 text-right">₹
+                                                                            {{ number_format(collect($data['sales_bills'])->sum('amount_before_tax'), 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right text-orange-600">
+                                                                            ₹
+                                                                            {{ number_format(collect($data['sales_bills'])->sum('sgst_amount') + collect($data['sales_bills'])->sum('cgst_amount') + collect($data['sales_bills'])->sum('igst_amount'), 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right text-emerald-700">
+                                                                            ₹ {{ number_format($salesBillTotal, 2) }}
+                                                                        </td>
+                                                                        <td></td>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            @endif
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- Comparison Result --}}
+                                            @if ($isMatched)
+                                                <div
+                                                    class="mt-3 p-3 rounded-lg {{ $isAmountMatch ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200' }}">
+                                                    <div class="flex items-center justify-between text-sm">
+                                                        <div class="flex items-center gap-2">
+                                                            <span>{{ $isAmountMatch ? '✅' : '⚠️' }}</span>
+                                                            <span class="font-medium">
+                                                                {{ $isAmountMatch ? 'Amounts Match Perfectly' : 'Amount Mismatch Detected' }}
+                                                            </span>
+                                                        </div>
+                                                        <div class="flex gap-6">
+                                                            <span>Gsuite: <strong class="text-indigo-600">₹
+                                                                    {{ number_format($receiptTotal, 2) }}</strong></span>
+                                                            <span>Sales Bill: <strong class="text-emerald-600">₹
+                                                                    {{ number_format($salesBillTotal, 2) }}</strong></span>
+                                                            @if (!$isAmountMatch)
+                                                                <span class="text-red-600 font-medium">Diff: ₹
+                                                                    {{ number_format($amountDiff, 2) }}</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+
+        {{-- Month + Client Wise Comparison Table --}}
+        @if (count($groupedData) > 0)
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-indigo-600" fill="none" stroke="currentColor"
+                            viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        Month & Client Wise Comparison
+                    </h2>
+                    <span class="text-xs text-gray-400">
+                        {{ collect($groupedData)->sum(fn($c) => count($c)) }} clients across {{ count($groupedData) }}
+                        months
+                    </span>
+                </div>
+
+                <div class="space-y-4">
+                    @foreach ($groupedData as $month => $clients)
+                        <div class="bg-white rounded-xl shadow-sm overflow-hidden" x-data="{ monthOpen: true }">
+
+                            {{-- Month Header --}}
+                            <div class="px-5 py-3 bg-gradient-to-r from-indigo-50 to-purple-50 border-b border-indigo-100 flex items-center justify-between cursor-pointer hover:bg-indigo-100 transition"
+                                @click="monthOpen = !monthOpen">
+                                <div class="flex items-center gap-3">
+                                    <svg :class="{ 'rotate-90': monthOpen }"
+                                        class="w-4 h-4 text-indigo-500 transition-transform" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7" />
+                                    </svg>
+                                    <h3 class="text-lg font-bold text-gray-800">
+                                        @if (empty($month) || $month === '0000-00')
+                                            Unknown Date
+                                        @else
+                                            {{ \Carbon\Carbon::hasFormat($month, 'Y-m')
+                                                ? \Carbon\Carbon::createFromFormat('Y-m', $month)->format('F Y')
+                                                : 'Unknown Date' }}
+                                        @endif
+                                    </h3>
+                                    <span class="text-xs bg-indigo-200 text-indigo-700 px-2 py-0.5 rounded-full">
+                                        {{ count($clients) }} client(s)
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-4 text-xs">
+                                    @php
+                                        $monthReceiptTotal = collect($clients)->sum(
+                                            fn($c) => collect($c['receipts'])->sum('grand_total'),
+                                        );
+                                        $monthSalesBillTotal = collect($clients)->sum(
+                                            fn($c) => collect($c['sales_bills'])->sum('total_amount'),
+                                        );
+                                    @endphp
+                                    <span class="text-indigo-600">Gsuite: ₹
+                                        {{ number_format($monthReceiptTotal, 2) }}</span>
+                                    <span class="text-emerald-600">Sales Bills: ₹
+                                        {{ number_format($monthSalesBillTotal, 2) }}</span>
+                                    @if (abs($monthReceiptTotal - $monthSalesBillTotal) > 1)
+                                        <span class="text-red-500 font-medium">
+                                            ⚠️ Diff: ₹
+                                            {{ number_format(abs($monthReceiptTotal - $monthSalesBillTotal), 2) }}
+                                        </span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Clients List --}}
+                            <div x-show="monthOpen" x-collapse class="divide-y divide-gray-100">
+                                @foreach ($clients as $clientName => $data)
+                                    @php
+                                        $hasReceipts = !empty($data['receipts']);
+                                        $hasSalesBills = !empty($data['sales_bills']);
+                                        $isMatched = $hasReceipts && $hasSalesBills;
+
+                                        $receiptTotal = collect($data['receipts'])->sum('grand_total');
+                                        $salesBillTotal = collect($data['sales_bills'])->sum('total_amount');
+                                        $amountDiff = abs($receiptTotal - $salesBillTotal);
+                                        $isAmountMatch = $amountDiff <= 1;
+                                    @endphp
+
+                                    <div class="px-5 py-3 hover:bg-gray-50 transition" x-data="{ clientOpen: false }">
+
+                                        {{-- Client Header --}}
+                                        <div class="flex items-center justify-between cursor-pointer"
+                                            @click="clientOpen = !clientOpen">
+                                            <div class="flex items-center gap-3">
+                                                <svg :class="{ 'rotate-90': clientOpen }"
+                                                    class="w-3 h-3 text-gray-400 transition-transform" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                                <div>
+                                                    <h4 class="font-semibold text-gray-800">{{ $clientName }}</h4>
+                                                    <div class="flex items-center gap-2 mt-0.5">
+                                                        @if ($isMatched)
+                                                            <span
+                                                                class="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                                                <svg class="w-3 h-3" fill="currentColor"
+                                                                    viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd"
+                                                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                                                                </svg>
+                                                                Matched
+                                                            </span>
+                                                            @if ($isAmountMatch)
+                                                                <span
+                                                                    class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✅
+                                                                    Amount matches</span>
+                                                            @else
+                                                                <span
+                                                                    class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">⚠️
+                                                                    Amount mismatch: ₹
+                                                                    {{ number_format($amountDiff, 2) }}</span>
+                                                            @endif
+                                                        @elseif ($hasReceipts && !$hasSalesBills)
+                                                            <span
+                                                                class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">⚠️
+                                                                Missing Sales Bill</span>
+                                                        @elseif (!$hasReceipts && $hasSalesBills)
+                                                            <span
+                                                                class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">📋
+                                                                Only in Sales Bills</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-4 text-sm">
+                                                <span class="text-indigo-600">Gsuite: ₹
+                                                    {{ number_format($receiptTotal, 2) }}</span>
+                                                <span class="text-emerald-600">Sales Bill: ₹
+                                                    {{ number_format($salesBillTotal, 2) }}</span>
+                                            </div>
+                                        </div>
+
+                                        {{-- Client Detail (Collapsible) --}}
+                                        <div x-show="clientOpen" x-collapse class="mt-3 pl-6">
+                                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+                                                {{-- Gsuite Receipts Table --}}
+                                                <div class="bg-indigo-50/30 rounded-lg overflow-hidden">
+                                                    <div class="px-3 py-2 bg-indigo-100 border-b border-indigo-200">
+                                                        <h5
+                                                            class="text-sm font-semibold text-indigo-800 flex items-center gap-2">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z" />
+                                                            </svg>
+                                                            Gsuite Receipts ({{ count($data['receipts']) }})
+                                                        </h5>
+                                                    </div>
+                                                    <div class="overflow-x-auto">
+                                                        <table class="w-full text-xs">
+                                                            <thead class="bg-indigo-100/50">
+                                                                <tr>
+                                                                    <th class="px-3 py-2 text-left">Invoice #</th>
+                                                                    <th class="px-3 py-2 text-left">Date</th>
+                                                                    <th class="px-3 py-2 text-left">Subscription</th>
+                                                                    <th class="px-3 py-2 text-right">Subtotal</th>
+                                                                    <th class="px-3 py-2 text-right">GST</th>
+                                                                    <th class="px-3 py-2 text-right">Total</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody class="divide-y divide-indigo-100">
+                                                                @foreach ($data['receipts'] as $receipt)
+                                                                    <tr class="hover:bg-indigo-50">
+                                                                        <td class="px-3 py-2 font-mono">
+                                                                            {{ $receipt->invoice_number ?? '—' }}</td>
+                                                                        <td class="px-3 py-2 whitespace-nowrap">
+                                                                            {{ $receipt->invoice_date?->format('d M Y') ?? '—' }}
+                                                                        </td>
+                                                                        <td class="px-3 py-2 max-w-xs truncate"
+                                                                            title="{{ $receipt->subscription }}">
+                                                                            {{ $receipt->subscription ?? '—' }}</td>
+                                                                        <td class="px-3 py-2 text-right">₹
+                                                                            {{ number_format($receipt->subtotal, 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right text-orange-600">
+                                                                            ₹
+                                                                            {{ number_format($receipt->gst_amount, 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right font-medium text-indigo-700">
+                                                                            ₹
+                                                                            {{ number_format($receipt->grand_total, 2) }}
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                            @if (count($data['receipts']) > 1)
+                                                                <tfoot>
+                                                                    <tr class="bg-indigo-100 font-bold">
+                                                                        <td colspan="3"
+                                                                            class="px-3 py-2 text-right">Total:</td>
+                                                                        <td class="px-3 py-2 text-right">₹
+                                                                            {{ number_format(collect($data['receipts'])->sum('subtotal'), 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right text-orange-600">
+                                                                            ₹
+                                                                            {{ number_format(collect($data['receipts'])->sum('gst_amount'), 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right text-indigo-700">
+                                                                            ₹ {{ number_format($receiptTotal, 2) }}
+                                                                        </td>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            @endif
+                                                        </table>
+                                                    </div>
+                                                </div>
+
+                                                {{-- Sales Bills Table --}}
+                                                <div class="bg-emerald-50/30 rounded-lg overflow-hidden">
+                                                    <div class="px-3 py-2 bg-emerald-100 border-b border-emerald-200">
+                                                        <h5
+                                                            class="text-sm font-semibold text-emerald-800 flex items-center gap-2">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            Your Sales Bills ({{ count($data['sales_bills']) }})
+                                                        </h5>
+                                                    </div>
+                                                    <div class="overflow-x-auto">
+                                                        <table class="w-full text-xs">
+                                                            <thead class="bg-emerald-100/50">
+                                                                <tr>
+                                                                    <th class="px-3 py-2 text-left">Invoice #</th>
+                                                                    <th class="px-3 py-2 text-left">Date</th>
+                                                                    <th class="px-3 py-2 text-left">Description</th>
+                                                                    <th class="px-3 py-2 text-right">Before Tax</th>
+                                                                    <th class="px-3 py-2 text-right">GST</th>
+                                                                    <th class="px-3 py-2 text-right">Total</th>
+                                                                    <th class="px-3 py-2 text-center">Action</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody class="divide-y divide-emerald-100">
+                                                                @foreach ($data['sales_bills'] as $bill)
+                                                                    <tr class="hover:bg-emerald-50">
+                                                                        <td class="px-3 py-2 font-mono">
+                                                                            @if ($bill->client_name)
+                                                                                <span
+                                                                                    class="inline-block px-1 py-0.5 bg-gray-100 rounded cursor-pointer hover:bg-amber-100 transition text-xs"
+                                                                                    onclick="editSalesBillClientName({{ $bill->id }}, '{{ $bill->client_name }}', this)">
+                                                                                    {{ $bill->invoice_number ?? '—' }}
+                                                                                </span>
+                                                                            @else
+                                                                                {{ $bill->invoice_number ?? '—' }}
+                                                                            @endif
+                                                                        </td>
+                                                                        <td class="px-3 py-2 whitespace-nowrap">
+                                                                            {{ $bill->invoice_date?->format('d M Y') ?? '—' }}
+                                                                        </td>
+                                                                        <td class="px-3 py-2 max-w-xs truncate"
+                                                                            title="{{ $bill->description }}">
+                                                                            {{ $bill->description ?? ($bill->particulars ?? '—') }}
+                                                                        </td>
+                                                                        <td class="px-3 py-2 text-right">₹
+                                                                            {{ number_format($bill->amount_before_tax, 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right text-orange-600">
+                                                                            ₹
+                                                                            {{ number_format($bill->sgst_amount + $bill->cgst_amount + $bill->igst_amount, 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right font-medium text-emerald-700">
+                                                                            ₹
+                                                                            {{ number_format($bill->total_amount, 2) }}
+                                                                        </td>
+                                                                        <td class="px-3 py-2 text-center">
+                                                                            <button
+                                                                                onclick="deleteSalesBill({{ $bill->id }})"
+                                                                                class="text-red-400 hover:text-red-600 transition p-1 rounded hover:bg-red-50"
+                                                                                title="Delete">
+                                                                                <svg class="w-3 h-3" fill="none"
+                                                                                    stroke="currentColor"
+                                                                                    viewBox="0 0 24 24">
+                                                                                    <path stroke-linecap="round"
+                                                                                        stroke-linejoin="round"
+                                                                                        stroke-width="2"
+                                                                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                                </svg>
+                                                                            </button>
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                            @if (count($data['sales_bills']) > 1)
+                                                                <tfoot>
+                                                                    <tr class="bg-emerald-100 font-bold">
+                                                                        <td colspan="3"
+                                                                            class="px-3 py-2 text-right">Total:</td>
+                                                                        <td class="px-3 py-2 text-right">₹
+                                                                            {{ number_format(collect($data['sales_bills'])->sum('amount_before_tax'), 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right text-orange-600">
+                                                                            ₹
+                                                                            {{ number_format(collect($data['sales_bills'])->sum('sgst_amount') + collect($data['sales_bills'])->sum('cgst_amount') + collect($data['sales_bills'])->sum('igst_amount'), 2) }}
+                                                                        </td>
+                                                                        <td
+                                                                            class="px-3 py-2 text-right text-emerald-700">
+                                                                            ₹ {{ number_format($salesBillTotal, 2) }}
+                                                                        </td>
+                                                                        <td></td>
+                                                                    </tr>
+                                                                </tfoot>
+                                                            @endif
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {{-- Comparison Result for this client --}}
+                                            @if ($isMatched)
+                                                <div
+                                                    class="mt-3 p-3 rounded-lg {{ $isAmountMatch ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200' }}">
+                                                    <div class="flex items-center justify-between text-sm">
+                                                        <div class="flex items-center gap-2">
+                                                            <span>{{ $isAmountMatch ? '✅' : '⚠️' }}</span>
+                                                            <span
+                                                                class="font-medium">{{ $isAmountMatch ? 'Amounts Match Perfectly' : 'Amount Mismatch Detected' }}</span>
+                                                        </div>
+                                                        <div class="flex gap-4">
+                                                            <span>Gsuite Total: <strong class="text-indigo-600">₹
+                                                                    {{ number_format($receiptTotal, 2) }}</strong></span>
+                                                            <span>Sales Bill Total: <strong class="text-emerald-600">₹
+                                                                    {{ number_format($salesBillTotal, 2) }}</strong></span>
+                                                            @if (!$isAmountMatch)
+                                                                <span class="text-red-600">Difference: ₹
+                                                                    {{ number_format($amountDiff, 2) }}</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
 
         {{-- ── MERGE TOOLBAR ── --}}
         <div x-show="selectedIds.length >= 2" x-cloak
@@ -634,6 +1362,70 @@
         </div>
     </div>
 
+
+    {{-- MODAL: Upload Sales Bill PDF --}}
+    <div x-show="showSalesBillUpload" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+        @click.self="showSalesBillUpload = false">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6" @click.stop>
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-semibold text-gray-800">Upload Sales Bill PDF(s)</h2>
+                <button @click="showSalesBillUpload = false" class="text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('outsource.sales-bills.upload') }}"
+                enctype="multipart/form-data">
+                @csrf
+                <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-emerald-400 transition cursor-pointer"
+                    @click="$refs.salesBillFileInput.click()" @dragover.prevent
+                    @drop.prevent="handleSalesBillDrop($event)">
+                    <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p class="text-sm text-gray-500">Click to select Sales Bill PDF(s) or drag & drop</p>
+                    <p class="text-xs text-gray-400 mt-1">WBM Invoice format • SGST, CGST auto-extracted • Max 10MB
+                        each</p>
+                    <input type="file" name="pdfs[]" multiple accept=".pdf" x-ref="salesBillFileInput"
+                        class="hidden" @change="handleSalesBillFiles($event)">
+                </div>
+                <div x-show="salesBillUploadFiles.length > 0" class="mt-3 space-y-1 max-h-40 overflow-y-auto">
+                    <template x-for="(f, i) in salesBillUploadFiles" :key="i">
+                        <div class="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
+                            <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor"
+                                viewBox="0 0 20 20">
+                                <path fill-rule="evenodd"
+                                    d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
+                            </svg>
+                            <span x-text="f.name" class="truncate flex-1"></span>
+                            <span class="text-gray-400 text-xs flex-shrink-0"
+                                x-text="(f.size/1024).toFixed(0) + ' KB'"></span>
+                        </div>
+                    </template>
+                </div>
+                <div class="mt-3 bg-emerald-50 border border-emerald-100 rounded-lg px-4 py-3">
+                    <p class="text-xs text-emerald-700">
+                        📋 WBM-style invoice PDFs (Sanghani Hospital, etc.) — client name, invoice no., date, SGST, CGST
+                        & totals extracted automatically.
+                    </p>
+                </div>
+                <div class="flex gap-3 mt-5">
+                    <button type="button" @click="showSalesBillUpload = false"
+                        class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+                    <button type="submit" :disabled="salesBillUploadFiles.length === 0"
+                        class="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-sm font-medium transition">
+                        Upload & Parse PDF(s)
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- ══════════════════ ALPINE.JS ── --}}
     <script>
         // For selected grand total calculation
@@ -645,15 +1437,25 @@
 
         function outsourceApp() {
             return {
+                // ── Upload Modals ──────────────────────────────────────────
                 showUpload: false,
+                showSalesBillUpload: false,
+
+                // ── Merge Modals ───────────────────────────────────────────
                 showMergeModal: false,
                 showMergeByMonthModal: false,
+
+                // ── File Lists ─────────────────────────────────────────────
                 uploadFiles: [],
                 uploadClientName: '',
+                salesBillUploadFiles: [],
+
+                // ── Selection & Merge ──────────────────────────────────────
                 selectedIds: [],
                 mergedName: '',
                 mergeByMonthName: '',
 
+                // ── Init ───────────────────────────────────────────────────
                 init() {
                     this.$watch('selectedIds', () => {
                         const total = this.selectedIds.reduce((sum, id) => {
@@ -669,6 +1471,7 @@
                     });
                 },
 
+                // ── Gsuite Receipt PDF Upload ──────────────────────────────
                 handleFiles(e) {
                     this.uploadFiles = Array.from(e.target.files);
                 },
@@ -683,6 +1486,22 @@
                     }
                 },
 
+                // ── Sales Bill PDF Upload ──────────────────────────────────
+                handleSalesBillFiles(e) {
+                    this.salesBillUploadFiles = Array.from(e.target.files);
+                },
+
+                handleSalesBillDrop(e) {
+                    const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+                    if (files.length) {
+                        this.salesBillUploadFiles = files;
+                        const dt = new DataTransfer();
+                        files.forEach(f => dt.items.add(f));
+                        this.$refs.salesBillFileInput.files = dt.files;
+                    }
+                },
+
+                // ── Select All Checkbox ────────────────────────────────────
                 toggleAll(e) {
                     if (e.target.checked) {
                         this.selectedIds = Array.from(
@@ -693,6 +1512,7 @@
                     }
                 },
 
+                // ── Delete Gsuite Receipt ──────────────────────────────────
                 deleteRecord(id) {
                     if (!confirm('Delete this receipt?')) return;
                     fetch(`/outsource/${id}`, {
@@ -707,6 +1527,7 @@
                     });
                 },
 
+                // ── Merge (single) ─────────────────────────────────────────
                 submitMerge() {
                     if (!this.mergedName.trim() || this.selectedIds.length < 2) return;
                     fetch('{{ route('outsource.merge') }}', {
@@ -732,6 +1553,7 @@
                     });
                 },
 
+                // ── Merge by Month ─────────────────────────────────────────
                 submitMergeByMonth() {
                     if (!this.mergeByMonthName.trim() || this.selectedIds.length < 2) return;
                     fetch('{{ route('outsource.mergeByMonth') }}', {
@@ -759,6 +1581,7 @@
             }
         }
 
+        // ── Pending PDF: Retry ─────────────────────────────────────────────
         function retryPending(id) {
             fetch(`/outsource/pending/${id}/retry`, {
                 method: 'POST',
@@ -772,6 +1595,7 @@
             });
         }
 
+        // ── Pending PDF: Delete ────────────────────────────────────────────
         function deletePending(id) {
             if (!confirm('Remove this pending PDF entry?')) return;
             fetch(`/outsource/pending/${id}`, {
@@ -783,6 +1607,50 @@
             }).then(r => r.json()).then(data => {
                 if (data.success) window.location.reload();
                 else alert('Remove failed.');
+            });
+        }
+
+        // ── Sales Bill: Delete ─────────────────────────────────────────────
+        function deleteSalesBill(id) {
+            if (!confirm('Delete this Sales Bill?')) return;
+            fetch(`/outsource-sales-bills/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                }
+            }).then(r => r.json()).then(d => {
+                if (d.success) location.reload();
+                else alert('Delete failed.');
+            });
+        }
+
+        // ── Sales Bill: Edit Client Name ───────────────────────────────────
+        function editSalesBillClientName(billId, currentName, element) {
+            const newName = prompt("Edit Client Name:", currentName || "");
+            if (newName === null) return;
+            const trimmed = newName.trim();
+            if (trimmed === currentName) return;
+
+            fetch(`/outsource-sales-bills/${billId}/client-name`, {
+                method: 'PATCH',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify({
+                    client_name: trimmed
+                })
+            }).then(r => r.json()).then(data => {
+                if (data.success) {
+                    alert('Client name updated! Reloading...');
+                    location.reload();
+                } else {
+                    alert('Failed to update: ' + (data.message || ''));
+                }
+            }).catch(() => {
+                alert('Error updating client name.');
             });
         }
     </script>

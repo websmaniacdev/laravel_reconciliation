@@ -46,24 +46,14 @@
                     <p class="text-xs text-gray-400">Upload Hostinger PDF invoices to extract and track billing</p>
                 </div>
             </div>
-            <div class="flex gap-2">
-                <button @click="showUpload = true"
-                    class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    Upload Hostinger PDF(s)
-                </button>
-                <button @click="showYourBillUpload = true"
-                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    Upload Your Bill PDF(s)
-                </button>
-            </div>
+            <button @click="showUpload = true"
+                class="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                Upload PDF(s)
+            </button>
         </div>
     </header>
 
@@ -233,7 +223,7 @@
             @endif
         </div>
 
-        {{-- Comparison Summary Card --}}
+        {{-- NEW: Comparison Summary Card --}}
         @if ($matchedCount > 0)
             <div
                 class="mb-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl shadow-sm px-5 py-4 border border-green-200">
@@ -319,7 +309,7 @@
             </div>
         @endif
 
-        {{-- ========== MONTH + CLIENT WISE COMPARISON SECTION ========== --}}
+        {{-- ========== NEW: MONTH + CLIENT WISE COMPARISON SECTION ========== --}}
         @if (count($groupedData) > 0)
             <div class="mb-6">
                 <div class="flex items-center justify-between mb-3">
@@ -329,7 +319,7 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
                         </svg>
-                        Month & Client Wise Comparison
+                        Month & Client Wise Comparison (Hostinger vs Your Bills)
                     </h2>
                     <span
                         class="text-xs text-gray-400">{{ collect($groupedData)->sum(function ($c) {return count($c);}) }}
@@ -466,7 +456,6 @@
                                                                 <tr>
                                                                     <th class="px-3 py-2 text-left">Invoice #</th>
                                                                     <th class="px-3 py-2 text-left">Date</th>
-                                                                    <th class="px-3 py-2 text-left">Description</th>
                                                                     <th class="px-3 py-2 text-right">Amount</th>
                                                                     <th class="px-3 py-2 text-center">Curr</th>
                                                                 </tr>
@@ -479,9 +468,6 @@
                                                                         <td class="px-3 py-2 whitespace-nowrap">
                                                                             {{ $record->invoice_date?->format('d M Y') ?? '—' }}
                                                                         </td>
-                                                                        <td class="px-3 py-2 max-w-xs truncate"
-                                                                            title="{{ $record->description }}">
-                                                                            {{ $record->description ?? '—' }}</td>
                                                                         <td class="px-3 py-2 text-right font-medium">
                                                                             {{ $record->currency === 'INR' ? '₹' : '$' }}
                                                                             {{ number_format($record->line_total, 2) }}
@@ -532,7 +518,6 @@
                                                                 <tr>
                                                                     <th class="px-3 py-2 text-left">Invoice #</th>
                                                                     <th class="px-3 py-2 text-left">Date</th>
-                                                                    <th class="px-3 py-2 text-left">Description</th>
                                                                     <th class="px-3 py-2 text-right">Before Tax</th>
                                                                     <th class="px-3 py-2 text-right">GST</th>
                                                                     <th class="px-3 py-2 text-right">Total</th>
@@ -545,10 +530,6 @@
                                                                             {{ $bill->invoice_number ?? '—' }}</td>
                                                                         <td class="px-3 py-2 whitespace-nowrap">
                                                                             {{ $bill->invoice_date?->format('d M Y') ?? '—' }}
-                                                                        </td>
-                                                                        <td class="px-3 py-2 max-w-xs truncate"
-                                                                            title="{{ $bill->description }}">
-                                                                            {{ $bill->description ?? ($bill->particulars ?? '—') }}
                                                                         </td>
                                                                         <td class="px-3 py-2 text-right">₹
                                                                             {{ number_format($bill->amount_before_tax, 2) }}
@@ -791,7 +772,7 @@
         </div>
     </main>
 
-    {{-- MODAL: Upload Hostinger PDF --}}
+    {{-- UPLOAD MODAL --}}
     <div x-show="showUpload" x-cloak
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
         @click.self="showUpload = false">
@@ -851,74 +832,11 @@
         </div>
     </div>
 
-    {{-- MODAL: Upload Your Hostinger Bill PDF --}}
-    <div x-show="showYourBillUpload" x-cloak
-        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
-        @click.self="showYourBillUpload = false">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6" @click.stop>
-            <div class="flex items-center justify-between mb-5">
-                <h2 class="text-lg font-semibold text-gray-800">Upload Your Hostinger Bill PDF(s)</h2>
-                <button @click="showYourBillUpload = false" class="text-gray-400 hover:text-gray-600 transition">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M6 18L18 6M6 6l12 12" />
-                    </svg>
-                </button>
-            </div>
-            <form method="POST" action="{{ route('your-hostinger-bill.upload') }}" enctype="multipart/form-data">
-                @csrf
-                <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-emerald-400 transition cursor-pointer"
-                    @click="$refs.yourBillFileInput.click()" @dragover.prevent
-                    @drop.prevent="handleYourBillDrop($event)">
-                    <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor"
-                        viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                    </svg>
-                    <p class="text-sm text-gray-500">Click to select Your Bill PDF(s) or drag & drop</p>
-                    <p class="text-xs text-gray-400 mt-1">SGST, CGST, GST & amounts auto-extracted • Max 10MB each</p>
-                    <input type="file" name="pdfs[]" multiple accept=".pdf" x-ref="yourBillFileInput"
-                        class="hidden" @change="handleYourBillFiles($event)">
-                </div>
-                <div x-show="yourBillUploadFiles.length > 0" class="mt-3 space-y-1 max-h-40 overflow-y-auto">
-                    <template x-for="(f, i) in yourBillUploadFiles" :key="i">
-                        <div class="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
-                            <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor"
-                                viewBox="0 0 20 20">
-                                <path fill-rule="evenodd"
-                                    d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
-                            </svg>
-                            <span x-text="f.name" class="truncate flex-1"></span>
-                            <span class="text-gray-400 text-xs flex-shrink-0"
-                                x-text="(f.size/1024).toFixed(0) + ' KB'"></span>
-                        </div>
-                    </template>
-                </div>
-                <div class="mt-3 bg-emerald-50 border border-emerald-100 rounded-lg px-4 py-3">
-                    <p class="text-xs text-emerald-700">
-                        📋 PDF will be parsed immediately — client name, invoice no, date, SGST, CGST, amount before tax
-                        & total amount all extracted automatically.
-                    </p>
-                </div>
-                <div class="flex gap-3 mt-5">
-                    <button type="button" @click="showYourBillUpload = false"
-                        class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancel</button>
-                    <button type="submit" :disabled="yourBillUploadFiles.length === 0"
-                        class="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-sm font-medium transition">
-                        Upload & Parse PDF(s)
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <script>
         function hostingerApp() {
             return {
                 showUpload: false,
-                showYourBillUpload: false,
                 uploadFiles: [],
-                yourBillUploadFiles: [],
                 handleFiles(e) {
                     this.uploadFiles = Array.from(e.target.files);
                 },
@@ -929,18 +847,6 @@
                         const dt = new DataTransfer();
                         files.forEach(f => dt.items.add(f));
                         this.$refs.fileInput.files = dt.files;
-                    }
-                },
-                handleYourBillFiles(e) {
-                    this.yourBillUploadFiles = Array.from(e.target.files);
-                },
-                handleYourBillDrop(e) {
-                    const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
-                    if (files.length) {
-                        this.yourBillUploadFiles = files;
-                        const dt = new DataTransfer();
-                        files.forEach(f => dt.items.add(f));
-                        this.$refs.yourBillFileInput.files = dt.files;
                     }
                 },
             };

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Exports\OutsourceReceiptsExport;
 use App\Jobs\ProcessOutsourcePdf;
 use App\Models\OutsourceReceipt;
+use App\Models\OutsourceSalesBill;
 use App\Models\PendingOutsourcePdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -28,21 +29,19 @@ class OutsourceReceiptController extends Controller
 
     public function index(Request $request)
     {
+        // ── OUTSOURCE RECEIPTS QUERY ──────────────────────────────────
         $query = OutsourceReceipt::query();
 
         if ($request->filled('client_name')) {
             $query->where('client_name', 'like', '%' . $request->client_name . '%');
         }
-
         if ($request->filled('from_date')) {
             $query->whereDate('invoice_date', '>=', $request->from_date);
         }
-
         if ($request->filled('to_date')) {
             $query->whereDate('invoice_date', '<=', $request->to_date);
         }
 
-        // ── Summary totals (filter-wise) ──────────────────────────────
         $filteredSubtotal   = (clone $query)->sum('subtotal');
         $filteredGst        = (clone $query)->sum('gst_amount');
         $filteredGrandTotal = (clone $query)->sum('grand_total');
@@ -54,7 +53,121 @@ class OutsourceReceiptController extends Controller
             ->paginate(500)
             ->withQueryString();
 
-        // Pending / failed PDFs
+        // ── SALES BILLS QUERY ─────────────────────────────────────────
+        $salesBillQuery = OutsourceSalesBill::query();
+
+        if ($request->filled('client_name')) {
+            $salesBillQuery->where('client_name', 'like', '%' . $request->client_name . '%');
+        }
+        if ($request->filled('from_date')) {
+            $salesBillQuery->whereDate('invoice_date', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $salesBillQuery->whereDate('invoice_date', '<=', $request->to_date);
+        }
+
+        $salesBills      = $salesBillQuery->orderBy('invoice_date', 'desc')->get();
+        $salesBillsTotal = $salesBills->sum('total_amount');
+
+        // ══════════════════════════════════════════════════════════════
+        // GROUPED DATA — 6-Month Period + Client wise
+        //
+        // Period key for receipts:
+        //   We detect the 6-month slot from the receipt's invoice_date.
+        //   e.g. invoice_date = 2026-04-30 → period "2026-04|2026-09"
+        //        invoice_date = 2025-10-15 → period "2025-10|2026-03"
+        //
+        // Period key for sales bills:
+        //   Comes directly from period_start / period_end parsed from PDF.
+        //   e.g. "Apr 2026 – Sep 2026" → "2026-04|2026-09"
+        //
+        // Helper: given a date, return the 6-month period key
+        // Periods: Apr–Sep (H1) and Oct–Mar (H2) of a financial year
+        // ══════════════════════════════════════════════════════════════
+
+        $getPeriodKey = function ($date) {
+            if (!$date) return 'unknown';
+            $d     = $date instanceof \Carbon\Carbon ? $date : \Carbon\Carbon::parse($date);
+            $month = (int) $d->format('n');
+            $year  = (int) $d->format('Y');
+
+            // Apr(4)–Sep(9) → "YYYY-04|YYYY-09"
+            if ($month >= 4 && $month <= 9) {
+                return $year . '-04|' . $year . '-09';
+            }
+            // Oct(10)–Dec(12) → "YYYY-10|(YYYY+1)-03"
+            if ($month >= 10) {
+                return $year . '-10|' . ($year + 1) . '-03';
+            }
+            // Jan(1)–Mar(3) → "(YYYY-1)-10|YYYY-03"
+            return ($year - 1) . '-10|' . $year . '-03';
+        };
+
+        $getPeriodLabel = function ($periodKey) {
+            if ($periodKey === 'unknown') return 'Unknown Period';
+            [$start, $end] = explode('|', $periodKey);
+            try {
+                $s = \Carbon\Carbon::createFromFormat('Y-m', $start);
+                $e = \Carbon\Carbon::createFromFormat('Y-m', $end);
+                return $s->format('M Y') . ' – ' . $e->format('M Y');
+            } catch (\Throwable $th) {
+                return $periodKey;
+            }
+        };
+
+        $groupedData = [];
+
+        // Group Gsuite receipts by 6-month period + client
+        foreach ($records as $record) {
+            $periodKey = $getPeriodKey($record->invoice_date);
+            $clientKey = strtoupper(trim($record->client_name ?? 'Unknown'));
+
+            if (!isset($groupedData[$periodKey][$clientKey])) {
+                $groupedData[$periodKey][$clientKey] = [
+                    'receipts'    => [],
+                    'sales_bills' => [],
+                    'period_label' => $getPeriodLabel($periodKey),
+                ];
+            }
+            $groupedData[$periodKey][$clientKey]['receipts'][] = $record;
+        }
+
+        // Group Sales bills by their parsed 6-month period + client
+        foreach ($salesBills as $bill) {
+            // Use period_start/period_end if available, else fall back to invoice_date
+            if ($bill->period_start && $bill->period_end) {
+                $periodKey = $bill->period_start->format('Y-m') . '|' . $bill->period_end->format('Y-m');
+            } else {
+                $periodKey = $getPeriodKey($bill->invoice_date);
+            }
+
+            $clientKey = strtoupper(trim($bill->client_name ?? 'Unknown'));
+
+            if (!isset($groupedData[$periodKey][$clientKey])) {
+                $groupedData[$periodKey][$clientKey] = [
+                    'receipts'     => [],
+                    'sales_bills'  => [],
+                    'period_label' => $bill->period_label ?? $getPeriodLabel($periodKey),
+                ];
+            }
+            $groupedData[$periodKey][$clientKey]['sales_bills'][] = $bill;
+        }
+
+        // Sort: newest period first
+        krsort($groupedData);
+
+        // Count matched clients (has both receipt AND sales bill in same period)
+        $matchedCount = 0;
+        foreach ($groupedData as $clients) {
+            foreach ($clients as $clientKey => $data) {
+                if ($clientKey === 'period_label') continue;
+                if (!empty($data['receipts']) && !empty($data['sales_bills'])) {
+                    $matchedCount++;
+                }
+            }
+        }
+
+        // ── PENDING PDFs ──────────────────────────────────────────────
         $pendingPdfs = PendingOutsourcePdf::whereIn('status', ['pending', 'processing', 'failed'])
             ->orderBy('created_at', 'desc')
             ->get();
@@ -65,9 +178,14 @@ class OutsourceReceiptController extends Controller
             'filteredSubtotal',
             'filteredGst',
             'filteredGrandTotal',
-            'filteredCount'
+            'filteredCount',
+            'salesBills',
+            'salesBillsTotal',
+            'groupedData',
+            'matchedCount'
         ));
     }
+
 
     // ══════════════════════════════════════════════════════════════════
     // UPLOAD

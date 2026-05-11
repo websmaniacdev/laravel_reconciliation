@@ -23,31 +23,8 @@
 
     {{-- ══════════════════ TOP HEADER ══════════════════ --}}
     <header class="bg-white shadow-sm border-b">
-        <div class="flex items-center justify-between h-16">
-            <!-- Navigation -->
-            <nav class="hidden md:flex items-center space-x-6 text-sm font-medium">
-
-                <a href="{{ route('invoices.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    Invoices
-                </a>
-
-                <a href="{{ route('outsource.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    Gsuite
-                </a>
-
-                <a href="{{ route('hostinger.invoices.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    Hostinger
-                </a>
-
-                <a href="{{ route('bankstatements.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    Bank Statements
-                </a>
-
-                <a href="{{ route('godaddy.index') }}" class="text-gray-700 hover:text-blue-600 transition">
-                    GoDaddy
-                </a>
-
-            </nav>
+        <div class="flex items-center justify-between h-16 max-w-7xl mx-auto px-4">
+            @include('layouts.nav')
         </div>
         <div class="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
             <div class="flex items-center gap-3">
@@ -59,14 +36,24 @@
                 </div>
                 <h1 class="text-xl font-bold text-gray-800">Meta Ads Invoice Manager</h1>
             </div>
-            <button @click="showUpload = true"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
-                </svg>
-                Upload PDF(s)
-            </button>
+            <div class="flex gap-2">
+                <button @click="showUpload = true"
+                    class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Upload Meta Ads PDF(s)
+                </button>
+                <button @click="showSalesBillUpload = true"
+                    class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    Upload Your Sales Bill PDF(s)
+                </button>
+            </div>
         </div>
     </header>
 
@@ -95,7 +82,6 @@
         </div>
     @endif
 
-    {{-- ══════════════════ MAIN CONTENT ══════════════════ --}}
     <main class="max-w-7xl mx-auto px-4 py-6">
 
         {{-- ── FILTER BAR ── --}}
@@ -127,31 +113,19 @@
                     </div>
                     <div class="flex gap-2">
                         <button type="submit"
-                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
-                            Filter
-                        </button>
+                            class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">Filter</button>
                         <a href="{{ route('invoices.index') }}"
-                            class="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition">
-                            Clear
-                        </a>
-                        <a href="{{ route('invoices.export', [
-                            'client_name' => request('client_name'),
-                            'from_date' => request('from_date'),
-                            'to_date' => request('to_date'),
-                        ]) }}"
-                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition">
-                            Export
-                        </a>
+                            class="px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition">Clear</a>
+                        <a href="{{ route('invoices.export', ['client_name' => request('client_name'), 'from_date' => request('from_date'), 'to_date' => request('to_date')]) }}"
+                            class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm font-medium transition">Export</a>
                     </div>
                 </div>
             </form>
         </div>
 
-        {{-- ══════════════════ FILTER-WISE TOTAL SUMMARY BAR ══════════════════ --}}
+        {{-- ══════════════════ SUMMARY BAR ══════════════════ --}}
         <div class="bg-white rounded-xl shadow-sm px-5 py-4 mb-5 border border-gray-100">
             <div class="flex flex-wrap items-center justify-between gap-4">
-
-                {{-- Label --}}
                 <div class="flex items-center gap-2">
                     <div class="w-2 h-2 rounded-full bg-blue-500"></div>
                     <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -167,8 +141,6 @@
                         </span>
                     @endif
                 </div>
-
-                {{-- Totals --}}
                 <div class="flex flex-wrap items-center gap-6">
                     <div class="text-center">
                         <p class="text-xs text-gray-400 mb-0.5">Subtotal (excl. GST)</p>
@@ -192,43 +164,34 @@
                     </div>
                 </div>
             </div>
-
-            {{-- Active filters display --}}
-            @if (request('client_name') || request('from_date') || request('to_date'))
-                <div class="mt-3 flex flex-wrap gap-2 pt-3 border-t border-gray-100">
-                    @if (request('client_name'))
-                        <span
-                            class="inline-flex items-center gap-1 bg-blue-50 border border-blue-200 text-blue-700 text-xs px-2.5 py-1 rounded-full">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                            </svg>
-                            Client: <strong>{{ request('client_name') }}</strong>
-                        </span>
-                    @endif
-                    @if (request('from_date'))
-                        <span
-                            class="inline-flex items-center gap-1 bg-purple-50 border border-purple-200 text-purple-700 text-xs px-2.5 py-1 rounded-full">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            From: <strong>{{ \Carbon\Carbon::parse(request('from_date'))->format('d M Y') }}</strong>
-                        </span>
-                    @endif
-                    @if (request('to_date'))
-                        <span
-                            class="inline-flex items-center gap-1 bg-purple-50 border border-purple-200 text-purple-700 text-xs px-2.5 py-1 rounded-full">
-                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                            </svg>
-                            To: <strong>{{ \Carbon\Carbon::parse(request('to_date'))->format('d M Y') }}</strong>
-                        </span>
-                    @endif
-                </div>
-            @endif
         </div>
+
+        {{-- ══════════════════ COMPARISON SUMMARY CARD ══════════════════ --}}
+        @if ($matchedCount > 0)
+            <div
+                class="mb-5 bg-gradient-to-r from-green-50 to-emerald-50 rounded-xl shadow-sm px-5 py-4 border border-green-200">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                            <svg class="w-5 h-5 text-green-600" fill="none" stroke="currentColor"
+                                viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-800">Meta Ads vs Your Sales Bills Comparison</h3>
+                            <p class="text-xs text-gray-500">{{ $matchedCount }} client(s) have both Meta Ads records
+                                and Your Sales Bills</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-xs text-gray-500">Total Your Bills Amount</p>
+                        <p class="text-xl font-bold text-green-700">₹ {{ number_format($yourBillsTotal, 2) }}</p>
+                    </div>
+                </div>
+            </div>
+        @endif
 
         {{-- ── PENDING PDFs STATUS ── --}}
         @if ($pendingPdfs->isNotEmpty())
@@ -242,14 +205,10 @@
                         </svg>
                         Pending / Failed PDFs
                     </h2>
-                    {{-- <span class="text-xs text-gray-400">Run: <code
-                            class="bg-gray-100 px-2 py-0.5 rounded font-mono">php artisan invoice:process-pending
-                            --sync</code></span> --}}
-                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">
-                        <a href="{{ route('invoices.run') }}" class="btn btn-primary">
-                            Run Invoice Meta Process
-                        </a>
-                    </button>
+                    <a href="{{ route('invoices.run') }}"
+                        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition">
+                        Run Invoice Meta Process
+                    </a>
                 </div>
                 <div class="divide-y divide-gray-50">
                     @foreach ($pendingPdfs as $pending)
@@ -289,6 +248,388 @@
             </div>
         @endif
 
+        {{-- ══════════════════ MONTH + CLIENT WISE COMPARISON ══════════════════ --}}
+        @if (count($groupedData) > 0)
+            <div class="mb-6">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
+                        </svg>
+                        Month & Client Wise Comparison
+                    </h2>
+                    <span class="text-xs text-gray-400">
+                        {{ collect($groupedData)->sum(fn($c) => count($c)) }} clients across {{ count($groupedData) }}
+                        months
+                    </span>
+                </div>
+
+                <div class="space-y-4">
+                    @foreach ($groupedData as $month => $clients)
+                        <div class="bg-white rounded-xl shadow-sm overflow-hidden" x-data="{ monthOpen: true }">
+
+                            {{-- Month Header --}}
+                            <div class="px-5 py-3 bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-100 flex items-center justify-between cursor-pointer hover:bg-blue-100 transition"
+                                @click="monthOpen = !monthOpen">
+                                <div class="flex items-center gap-3">
+                                    <svg :class="{ 'rotate-90': monthOpen }"
+                                        class="w-4 h-4 text-blue-500 transition-transform" fill="none"
+                                        stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 5l7 7-7 7" />
+                                    </svg>
+                                    <h3 class="text-lg font-bold text-gray-800">
+                                        @if ($month === '0000-00')
+                                            Unknown Date
+                                        @else
+                                            {{ \Carbon\Carbon::createFromFormat('Y-m', $month)->format('F Y') }}
+                                        @endif
+                                    </h3>
+                                    <span class="text-xs bg-blue-200 text-blue-700 px-2 py-0.5 rounded-full">
+                                        {{ count($clients) }} client(s)
+                                    </span>
+                                </div>
+                                <div class="flex items-center gap-4 text-xs">
+                                    @php
+                                        $monthMetaTotal = collect($clients)->sum(function ($c) {
+                                            return collect($c['meta_ads'])->sum('price');
+                                        });
+                                        $monthBillTotal = collect($clients)->sum(function ($c) {
+                                            return collect($c['your_bills'])->sum('total_amount');
+                                        });
+                                        $monthDiff = abs($monthMetaTotal - $monthBillTotal);
+                                    @endphp
+                                    <span class="text-blue-600 font-medium">Meta Ads: ₹
+                                        {{ number_format($monthMetaTotal, 2) }}</span>
+                                    <span class="text-emerald-600 font-medium">Your Bills: ₹
+                                        {{ number_format($monthBillTotal, 2) }}</span>
+                                    @if ($monthBillTotal > 0 && $monthDiff > 1)
+                                        <span class="text-red-500 font-medium">⚠️ Diff: ₹
+                                            {{ number_format($monthDiff, 2) }}</span>
+                                    @endif
+                                </div>
+                            </div>
+
+                            {{-- Clients under this month --}}
+                            <div x-show="monthOpen" x-collapse class="divide-y divide-gray-100">
+                                @foreach ($clients as $clientName => $data)
+                                    @php
+                                        $hasMetaAds = !empty($data['meta_ads']);
+                                        $hasYourBills = !empty($data['your_bills']);
+                                        $isMatched = $hasMetaAds && $hasYourBills;
+
+                                        $metaTotal = collect($data['meta_ads'])->sum('price');
+                                        $metaGst = round($metaTotal * 0.18, 2);
+                                        $metaGrand = round($metaTotal + $metaGst, 2);
+
+                                        $billTotal = collect($data['your_bills'])->sum('total_amount');
+                                        $amountDiff = abs($metaGrand - $billTotal);
+                                        $isAmountMatch = $amountDiff <= 1;
+                                    @endphp
+
+                                    <div class="px-5 py-3 hover:bg-gray-50 transition" x-data="{ clientOpen: false }">
+
+                                        {{-- Client row header --}}
+                                        <div class="flex items-center justify-between cursor-pointer"
+                                            @click="clientOpen = !clientOpen">
+                                            <div class="flex items-center gap-3">
+                                                <svg :class="{ 'rotate-90': clientOpen }"
+                                                    class="w-3 h-3 text-gray-400 transition-transform" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2" d="M9 5l7 7-7 7" />
+                                                </svg>
+                                                <div>
+                                                    <h4 class="font-semibold text-gray-800">{{ $clientName }}</h4>
+                                                    <div class="flex items-center gap-2 mt-0.5">
+                                                        @if ($isMatched)
+                                                            <span
+                                                                class="inline-flex items-center gap-1 text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">
+                                                                <svg class="w-3 h-3" fill="currentColor"
+                                                                    viewBox="0 0 20 20">
+                                                                    <path fill-rule="evenodd"
+                                                                        d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" />
+                                                                </svg>
+                                                                Matched
+                                                            </span>
+                                                            @if ($isAmountMatch)
+                                                                <span
+                                                                    class="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full">✅
+                                                                    Amount matches</span>
+                                                            @else
+                                                                <span
+                                                                    class="text-xs bg-red-100 text-red-700 px-2 py-0.5 rounded-full">⚠️
+                                                                    Diff: ₹ {{ number_format($amountDiff, 2) }}</span>
+                                                            @endif
+                                                        @elseif ($hasMetaAds && !$hasYourBills)
+                                                            <span
+                                                                class="text-xs bg-yellow-100 text-yellow-700 px-2 py-0.5 rounded-full">⚠️
+                                                                Missing in Your Bills</span>
+                                                        @elseif (!$hasMetaAds && $hasYourBills)
+                                                            <span
+                                                                class="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full">📋
+                                                                Only in Your Bills</span>
+                                                        @endif
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center gap-6 text-sm">
+                                                @if ($hasMetaAds)
+                                                    <div class="text-right">
+                                                        <p class="text-xs text-gray-400">Meta Ads (excl. GST)</p>
+                                                        <p class="font-semibold text-blue-600">₹
+                                                            {{ number_format($metaTotal, 2) }}</p>
+                                                        <p class="text-xs text-gray-400">+ GST → ₹
+                                                            {{ number_format($metaGrand, 2) }}</p>
+                                                    </div>
+                                                @endif
+                                                @if ($hasYourBills)
+                                                    <div class="text-right">
+                                                        <p class="text-xs text-gray-400">Your Bills (incl. GST)</p>
+                                                        <p class="font-semibold text-emerald-600">₹
+                                                            {{ number_format($billTotal, 2) }}</p>
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        </div>
+
+                                        {{-- Client detail (collapsible) --}}
+                                        <div x-show="clientOpen" x-collapse class="mt-3 pl-6">
+                                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+
+                                                {{-- Meta Ads records table --}}
+                                                <div class="bg-blue-50/30 rounded-lg overflow-hidden">
+                                                    <div class="px-3 py-2 bg-blue-100 border-b border-blue-200">
+                                                        <h5
+                                                            class="text-sm font-semibold text-blue-800 flex items-center gap-2">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z" />
+                                                            </svg>
+                                                            Meta Ads Records ({{ count($data['meta_ads']) }})
+                                                        </h5>
+                                                    </div>
+                                                    @if (empty($data['meta_ads']))
+                                                        <p class="px-3 py-4 text-xs text-gray-400 text-center">No Meta
+                                                            Ads records this month</p>
+                                                    @else
+                                                        <div class="overflow-x-auto">
+                                                            <table class="w-full text-xs">
+                                                                <thead class="bg-blue-100/50">
+                                                                    <tr>
+                                                                        <th class="px-3 py-2 text-left">Client</th>
+                                                                        <th class="px-3 py-2 text-left">Campaign</th>
+                                                                        <th class="px-3 py-2 text-left">Date</th>
+                                                                        <th class="px-3 py-2 text-right">Price (excl.
+                                                                            GST)</th>
+                                                                        <th class="px-3 py-2 text-right">Impressions
+                                                                        </th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody class="divide-y divide-blue-100">
+                                                                    @foreach ($data['meta_ads'] as $record)
+                                                                        <tr class="hover:bg-blue-50">
+                                                                            <td class="px-3 py-2 font-medium">
+                                                                                {{ $record->client_name }}</td>
+                                                                            <td class="px-3 py-2 max-w-xs truncate text-gray-500"
+                                                                                title="{{ $record->campaign_type }}">
+                                                                                {{ $record->campaign_type ?? '—' }}
+                                                                            </td>
+                                                                            <td
+                                                                                class="px-3 py-2 whitespace-nowrap text-gray-500">
+                                                                                {{ $record->document_date?->format('d M Y') ?? '—' }}
+                                                                            </td>
+                                                                            <td
+                                                                                class="px-3 py-2 text-right font-medium text-blue-700">
+                                                                                ₹
+                                                                                {{ number_format($record->price, 2) }}
+                                                                            </td>
+                                                                            <td
+                                                                                class="px-3 py-2 text-right text-gray-500">
+                                                                                {{ $record->impressions ? number_format($record->impressions) : '—' }}
+                                                                            </td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                </tbody>
+                                                                @if (count($data['meta_ads']) >= 1)
+                                                                    <tfoot>
+                                                                        <tr class="bg-blue-100 font-bold">
+                                                                            <td colspan="3"
+                                                                                class="px-3 py-2 text-right">Subtotal
+                                                                                (excl. GST)
+                                                                                :</td>
+                                                                            <td
+                                                                                class="px-3 py-2 text-right text-blue-700">
+                                                                                ₹ {{ number_format($metaTotal, 2) }}
+                                                                            </td>
+                                                                            <td></td>
+                                                                        </tr>
+                                                                        <tr class="bg-blue-50 text-xs text-gray-500">
+                                                                            <td colspan="3"
+                                                                                class="px-3 py-1.5 text-right">+ IGST
+                                                                                18%:</td>
+                                                                            <td
+                                                                                class="px-3 py-1.5 text-right text-orange-600">
+                                                                                ₹ {{ number_format($metaGst, 2) }}</td>
+                                                                            <td></td>
+                                                                        </tr>
+                                                                        <tr class="bg-blue-200 font-bold text-sm">
+                                                                            <td colspan="3"
+                                                                                class="px-3 py-2 text-right">Grand
+                                                                                Total (incl. GST):</td>
+                                                                            <td
+                                                                                class="px-3 py-2 text-right text-blue-800">
+                                                                                ₹ {{ number_format($metaGrand, 2) }}
+                                                                            </td>
+                                                                            <td></td>
+                                                                        </tr>
+                                                                    </tfoot>
+                                                                @endif
+                                                            </table>
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Your Sales Bills table --}}
+                                                <div class="bg-emerald-50/30 rounded-lg overflow-hidden">
+                                                    <div class="px-3 py-2 bg-emerald-100 border-b border-emerald-200">
+                                                        <h5
+                                                            class="text-sm font-semibold text-emerald-800 flex items-center gap-2">
+                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor"
+                                                                viewBox="0 0 24 24">
+                                                                <path stroke-linecap="round" stroke-linejoin="round"
+                                                                    stroke-width="2"
+                                                                    d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                                            </svg>
+                                                            Your Sales Bills ({{ count($data['your_bills']) }})
+                                                        </h5>
+                                                    </div>
+                                                    @if (empty($data['your_bills']))
+                                                        <p class="px-3 py-4 text-xs text-gray-400 text-center">No sales
+                                                            bill uploaded for this client/month</p>
+                                                    @else
+                                                        <div class="overflow-x-auto">
+                                                            <table class="w-full text-xs">
+                                                                <thead class="bg-emerald-100/50">
+                                                                    <tr>
+                                                                        <th class="px-3 py-2 text-left">Invoice #</th>
+                                                                        <th class="px-3 py-2 text-left">Date</th>
+                                                                        <th class="px-3 py-2 text-right">Before Tax
+                                                                        </th>
+                                                                        <th class="px-3 py-2 text-right">GST</th>
+                                                                        <th class="px-3 py-2 text-right">Total</th>
+                                                                        <th class="px-3 py-2 text-center">Action</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody class="divide-y divide-emerald-100">
+                                                                    @foreach ($data['your_bills'] as $bill)
+                                                                        <tr class="hover:bg-emerald-50">
+                                                                            <td
+                                                                                class="px-3 py-2 font-mono text-gray-700">
+                                                                                {{ $bill->invoice_number ?? '—' }}</td>
+                                                                            <td
+                                                                                class="px-3 py-2 whitespace-nowrap text-gray-500">
+                                                                                {{ $bill->invoice_date?->format('d M Y') ?? '—' }}
+                                                                            </td>
+                                                                            <td
+                                                                                class="px-3 py-2 text-right text-gray-700">
+                                                                                ₹
+                                                                                {{ number_format($bill->amount_before_tax, 2) }}
+                                                                            </td>
+                                                                            <td
+                                                                                class="px-3 py-2 text-right text-orange-600">
+                                                                                ₹
+                                                                                {{ number_format($bill->sgst_amount + $bill->cgst_amount + $bill->igst_amount, 2) }}
+                                                                            </td>
+                                                                            <td
+                                                                                class="px-3 py-2 text-right font-medium text-emerald-700">
+                                                                                ₹
+                                                                                {{ number_format($bill->total_amount, 2) }}
+                                                                            </td>
+                                                                            <td class="px-3 py-2 text-center">
+                                                                                <button
+                                                                                    onclick="deleteSalesBill({{ $bill->id }})"
+                                                                                    class="text-red-400 hover:text-red-600 p-1 rounded hover:bg-red-50 transition"
+                                                                                    title="Delete">
+                                                                                    <svg class="w-3.5 h-3.5"
+                                                                                        fill="none"
+                                                                                        stroke="currentColor"
+                                                                                        viewBox="0 0 24 24">
+                                                                                        <path stroke-linecap="round"
+                                                                                            stroke-linejoin="round"
+                                                                                            stroke-width="2"
+                                                                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                                                                    </svg>
+                                                                                </button>
+                                                                            </td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                </tbody>
+                                                                @if (count($data['your_bills']) >= 1)
+                                                                    <tfoot>
+                                                                        <tr class="bg-emerald-100 font-bold">
+                                                                            <td colspan="3"
+                                                                                class="px-3 py-2 text-right">Total:
+                                                                            </td>
+                                                                            <td class="px-3 py-2 text-right">₹
+                                                                                {{ number_format(collect($data['your_bills'])->sum('amount_before_tax'), 2) }}
+                                                                            </td>
+                                                                            <td
+                                                                                class="px-3 py-2 text-right text-orange-600">
+                                                                                ₹
+                                                                                {{ number_format(collect($data['your_bills'])->sum('sgst_amount') + collect($data['your_bills'])->sum('cgst_amount') + collect($data['your_bills'])->sum('igst_amount'), 2) }}
+                                                                            </td>
+                                                                            <td
+                                                                                class="px-3 py-2 text-right text-emerald-700">
+                                                                                ₹ {{ number_format($billTotal, 2) }}
+                                                                            </td>
+                                                                            <td></td>
+                                                                        </tr>
+                                                                    </tfoot>
+                                                                @endif
+                                                            </table>
+                                                        </div>
+                                                    @endif
+                                                </div>
+
+                                            </div>
+
+                                            {{-- Comparison result bar --}}
+                                            @if ($isMatched)
+                                                <div
+                                                    class="mt-3 p-3 rounded-lg {{ $isAmountMatch ? 'bg-green-50 border border-green-200' : 'bg-red-50 border border-red-200' }}">
+                                                    <div class="flex items-center justify-between text-sm">
+                                                        <div class="flex items-center gap-2">
+                                                            <span>{{ $isAmountMatch ? '✅' : '⚠️' }}</span>
+                                                            <span
+                                                                class="font-medium">{{ $isAmountMatch ? 'Amounts Match Perfectly' : 'Amount Mismatch Detected' }}</span>
+                                                        </div>
+                                                        <div class="flex gap-4 text-xs">
+                                                            <span>Meta Ads (incl. GST): <strong class="text-blue-600">₹
+                                                                    {{ number_format($metaGrand, 2) }}</strong></span>
+                                                            <span>Your Bills Total: <strong class="text-emerald-600">₹
+                                                                    {{ number_format($billTotal, 2) }}</strong></span>
+                                                            @if (!$isAmountMatch)
+                                                                <span class="text-red-600 font-medium">Difference: ₹
+                                                                    {{ number_format($amountDiff, 2) }}</span>
+                                                            @endif
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            @endif
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
         {{-- ── MERGE TOOLBAR ── --}}
         <div x-show="selectedIds.length >= 2" x-cloak
             class="bg-amber-50 border border-amber-200 rounded-xl px-5 py-4 mb-5 flex items-center justify-between">
@@ -318,7 +659,7 @@
         {{-- ── INVOICE RECORDS TABLE ── --}}
         <div class="bg-white rounded-xl shadow-sm overflow-hidden">
             <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
-                <h2 class="text-sm font-semibold text-gray-700">Invoice Records</h2>
+                <h2 class="text-sm font-semibold text-gray-700">Meta Ads Invoice Records</h2>
                 <span class="text-xs text-gray-400">{{ $records->total() }} total records</span>
             </div>
             <div class="overflow-x-auto">
@@ -398,19 +739,12 @@
                         @empty
                             <tr>
                                 <td colspan="8" class="px-4 py-12 text-center text-gray-400">
-                                    <svg class="w-12 h-12 mx-auto mb-3 text-gray-300" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
-                                            d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414A1 1 0 0119 9.414V19a2 2 0 01-2 2z" />
-                                    </svg>
                                     <p class="font-medium">No records found</p>
                                     <p class="text-sm mt-1">Upload some PDF invoices to get started.</p>
                                 </td>
                             </tr>
                         @endforelse
                     </tbody>
-
-                    {{-- ── TABLE FOOTER: selected total (live via Alpine) ── --}}
                     <tfoot x-show="selectedIds.length > 0" x-cloak>
                         <tr class="bg-amber-50 border-t-2 border-amber-300">
                             <td colspan="4"
@@ -424,7 +758,6 @@
                 </table>
             </div>
 
-            {{-- ── PAGINATION ── --}}
             @if ($records->hasPages())
                 <div class="border-t border-gray-100 px-4 py-3 flex items-center justify-between">
                     <p class="text-sm text-gray-500">
@@ -440,7 +773,6 @@
                                 class="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">←
                                 Prev</a>
                         @endif
-
                         @foreach ($records->getUrlRange(max(1, $records->currentPage() - 2), min($records->lastPage(), $records->currentPage() + 2)) as $page => $url)
                             @if ($page == $records->currentPage())
                                 <span
@@ -450,7 +782,6 @@
                                     class="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">{{ $page }}</a>
                             @endif
                         @endforeach
-
                         @if ($records->hasMorePages())
                             <a href="{{ $records->nextPageUrl() }}"
                                 class="px-3 py-1.5 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition">Next
@@ -464,7 +795,7 @@
             @endif
         </div>
 
-        {{-- ══════════════════ PDF-WISE SUBTOTALS TABLE ══════════════════ --}}
+        {{-- ── PDF-WISE SUBTOTALS ── --}}
         @if ($subtotals->isNotEmpty())
             <div class="bg-white rounded-xl shadow-sm overflow-hidden mt-6">
                 <div class="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
@@ -515,13 +846,10 @@
                                 <tr class="hover:bg-gray-50 transition">
                                     <td class="px-4 py-3 text-gray-400 text-xs">{{ $i + 1 }}</td>
                                     <td class="px-4 py-3 text-gray-700 text-xs font-mono max-w-xs truncate"
-                                        title="{{ $sub->pdf_filename }}">
-                                        {{ $sub->pdf_filename }}
-                                    </td>
+                                        title="{{ $sub->pdf_filename }}">{{ $sub->pdf_filename }}</td>
                                     <td class="px-4 py-3 text-gray-500 text-xs">{{ $sub->tax_invoice_id ?? '—' }}</td>
                                     <td class="px-4 py-3 text-gray-600 text-xs">
-                                        {{ $sub->document_date ? $sub->document_date->format('d M Y') : '—' }}
-                                    </td>
+                                        {{ $sub->document_date ? $sub->document_date->format('d M Y') : '—' }}</td>
                                     <td class="px-4 py-3 text-right text-gray-800 font-medium">
                                         {{ number_format($sub->subtotal, 2) }}</td>
                                     <td class="px-4 py-3 text-right text-orange-600">
@@ -537,9 +865,8 @@
                         <tfoot>
                             <tr class="bg-blue-50 font-bold border-t-2 border-blue-200">
                                 <td colspan="4"
-                                    class="px-4 py-3 text-right text-gray-700 text-xs uppercase tracking-wider">
-                                    Overall Total ({{ $subtotals->count() }} PDFs)
-                                </td>
+                                    class="px-4 py-3 text-right text-gray-700 text-xs uppercase tracking-wider">Overall
+                                    Total ({{ $subtotals->count() }} PDFs)</td>
                                 <td class="px-4 py-3 text-right text-gray-800">
                                     {{ number_format($subtotals->sum('subtotal'), 2) }}</td>
                                 <td class="px-4 py-3 text-right text-orange-600">
@@ -559,7 +886,7 @@
 
     </main>
 
-    {{-- ══════════════════ UPLOAD MODAL ══════════════════ --}}
+    {{-- ══════════════════ UPLOAD MODAL: Meta Ads ══════════════════ --}}
     <div x-show="showUpload" x-cloak
         class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
         @click.self="showUpload = false">
@@ -573,7 +900,6 @@
                     </svg>
                 </button>
             </div>
-
             <form method="POST" action="{{ route('invoices.upload') }}" enctype="multipart/form-data">
                 @csrf
                 <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-blue-400 transition cursor-pointer"
@@ -588,11 +914,63 @@
                     <input type="file" name="pdfs[]" multiple accept=".pdf" x-ref="fileInput" class="hidden"
                         @change="handleFiles($event)">
                 </div>
-
                 <div x-show="uploadFiles.length > 0" class="mt-3 space-y-1 max-h-40 overflow-y-auto">
                     <template x-for="(f, i) in uploadFiles" :key="i">
                         <div class="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
-                            <svg class="w-4 h-4 text-red-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <span x-text="f.name" class="truncate flex-1"></span>
+                            <span class="text-gray-400 text-xs flex-shrink-0"
+                                x-text="(f.size/1024).toFixed(0) + ' KB'"></span>
+                        </div>
+                    </template>
+                </div>
+                <div class="flex gap-3 mt-5">
+                    <button type="button" @click="showUpload = false"
+                        class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancel</button>
+                    <button type="submit" :disabled="uploadFiles.length === 0"
+                        class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-sm font-medium transition">
+                        Queue PDF(s) for Import
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    {{-- ══════════════════ UPLOAD MODAL: Your Sales Bill ══════════════════ --}}
+    <div x-show="showSalesBillUpload" x-cloak
+        class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+        @click.self="showSalesBillUpload = false">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg mx-4 p-6" @click.stop>
+            <div class="flex items-center justify-between mb-5">
+                <h2 class="text-lg font-semibold text-gray-800">Upload Your Sales Bill PDF(s)</h2>
+                <button @click="showSalesBillUpload = false" class="text-gray-400 hover:text-gray-600 transition">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </button>
+            </div>
+            <form method="POST" action="{{ route('your-sales-bill.upload') }}" enctype="multipart/form-data">
+                @csrf
+                <div class="border-2 border-dashed border-gray-200 rounded-xl p-8 text-center hover:border-emerald-400 transition cursor-pointer"
+                    @click="$refs.salesBillFileInput.click()" @dragover.prevent
+                    @drop.prevent="handleSalesBillDrop($event)">
+                    <svg class="w-10 h-10 text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor"
+                        viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                    </svg>
+                    <p class="text-sm text-gray-500">Click to select Your Sales Bill PDF(s) or drag & drop</p>
+                    <p class="text-xs text-gray-400 mt-1">
+                        1 record per PDF • Multi-line items summed automatically • SGST/CGST extracted • Max 10MB
+                    </p>
+                    <input type="file" name="pdfs[]" multiple accept=".pdf" x-ref="salesBillFileInput"
+                        class="hidden" @change="handleSalesBillFiles($event)">
+                </div>
+                <div x-show="salesBillFiles.length > 0" class="mt-3 space-y-1 max-h-40 overflow-y-auto">
+                    <template x-for="(f, i) in salesBillFiles" :key="i">
+                        <div class="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 rounded-lg px-3 py-2">
+                            <svg class="w-4 h-4 text-emerald-400 flex-shrink-0" fill="currentColor"
+                                viewBox="0 0 20 20">
                                 <path fill-rule="evenodd"
                                     d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4z" />
                             </svg>
@@ -602,21 +980,19 @@
                         </div>
                     </template>
                 </div>
-
-                <div class="mt-3 bg-blue-50 border border-blue-100 rounded-lg px-4 py-3">
-                    <p class="text-xs text-blue-700">
-                        📋 PDFs will be <strong>queued</strong> for processing. After upload, run:<br>
-                        <code class="font-mono bg-blue-100 px-1 py-0.5 rounded mt-1 inline-block">php artisan
-                            invoice:process-pending --sync</code>
+                <div class="mt-3 bg-emerald-50 border border-emerald-100 rounded-lg px-4 py-3">
+                    <p class="text-xs text-emerald-700">
+                        📋 Each PDF = <strong>1 record</strong>. Multiple line items in one PDF are summed into a single
+                        bill.
+                        Client name, invoice no., date, SGST, CGST & totals are auto-extracted.
                     </p>
                 </div>
-
                 <div class="flex gap-3 mt-5">
-                    <button type="button" @click="showUpload = false"
+                    <button type="button" @click="showSalesBillUpload = false"
                         class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancel</button>
-                    <button type="submit" :disabled="uploadFiles.length === 0"
-                        class="flex-1 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-300 text-white rounded-xl text-sm font-medium transition">
-                        Queue PDF(s) for Import
+                    <button type="submit" :disabled="salesBillFiles.length === 0"
+                        class="flex-1 px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 disabled:bg-emerald-300 text-white rounded-xl text-sm font-medium transition">
+                        Upload & Parse PDF(s)
                     </button>
                 </div>
             </form>
@@ -637,20 +1013,17 @@
                     </svg>
                 </button>
             </div>
-
             <div class="bg-amber-50 border border-amber-200 rounded-lg p-3 mb-4">
                 <p class="text-sm text-amber-800">
-                    <strong x-text="selectedIds.length"></strong> records will be merged into one.
-                    Their prices will be summed and individual records deleted.
+                    <strong x-text="selectedIds.length"></strong> records will be merged into one. Their prices will be
+                    summed.
                 </p>
             </div>
-
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Merged Record Name *</label>
-                <input type="text" x-model="mergedName" placeholder="e.g. Phoenix All Campaigns - April 2025"
+                <input type="text" x-model="mergedName" placeholder="e.g. Phoenix All Campaigns - April 2026"
                     class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-amber-500 outline-none">
             </div>
-
             <div class="flex gap-3 mt-5">
                 <button @click="showMergeModal = false"
                     class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancel</button>
@@ -682,25 +1055,22 @@
                     </svg>
                 </button>
             </div>
-
             <div class="bg-purple-50 border border-purple-200 rounded-lg p-3 mb-4">
                 <p class="text-sm text-purple-800">
-                    <strong x-text="selectedIds.length"></strong> records selected. Yeh records
-                    <strong>month-wise automatically group</strong> hokar merge honge.<br>
+                    <strong x-text="selectedIds.length"></strong> records selected. Records will be
+                    <strong>auto-grouped by month</strong>.
                     <span class="text-xs text-purple-600 mt-1 block">
-                        Example: "Phoenix" dene par → "Phoenix - January 2026", "Phoenix - February 2026" alag records
-                        banenge.
+                        E.g. "Phoenix" → "Phoenix - January 2026", "Phoenix - February 2026"
                     </span>
                 </p>
             </div>
-
             <div>
                 <label class="block text-sm font-medium text-gray-700 mb-1.5">Base Name *</label>
                 <input type="text" x-model="mergeByMonthName" placeholder="e.g. Phoenix"
                     class="w-full border border-gray-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
-                <p class="text-xs text-gray-400 mt-1">Full month name add hoga → "Phoenix - February 2026"</p>
+                <p class="text-xs text-gray-400 mt-1">Full month name added automatically → "Phoenix - February 2026"
+                </p>
             </div>
-
             <div class="flex gap-3 mt-5">
                 <button @click="showMergeByMonthModal = false"
                     class="flex-1 px-4 py-2.5 border border-gray-200 rounded-xl text-sm text-gray-600 hover:bg-gray-50 transition">Cancel</button>
@@ -712,9 +1082,8 @@
         </div>
     </div>
 
-    {{-- ══════════════════ ALPINE.JS APP ══════════════════ --}}
+    {{-- ══════════════════ ALPINE.JS ══════════════════ --}}
     <script>
-        // Record prices for selected-total calculation
         const recordPrices = {
             @foreach ($records as $record)
                 {{ $record->id }}: {{ $record->price }},
@@ -724,15 +1093,16 @@
         function invoiceApp() {
             return {
                 showUpload: false,
+                showSalesBillUpload: false,
                 showMergeModal: false,
                 showMergeByMonthModal: false,
                 uploadFiles: [],
+                salesBillFiles: [],
                 selectedIds: [],
                 mergedName: '',
                 mergeByMonthName: '',
 
                 init() {
-                    // Watch selectedIds to update the selected total cell
                     this.$watch('selectedIds', (ids) => {
                         const total = ids.reduce((sum, id) => sum + (recordPrices[id] || 0), 0);
                         const el = document.getElementById('selectedTotal');
@@ -746,7 +1116,6 @@
                 handleFiles(e) {
                     this.uploadFiles = Array.from(e.target.files);
                 },
-
                 handleDrop(e) {
                     const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
                     if (files.length) {
@@ -754,6 +1123,18 @@
                         const dt = new DataTransfer();
                         files.forEach(f => dt.items.add(f));
                         this.$refs.fileInput.files = dt.files;
+                    }
+                },
+                handleSalesBillFiles(e) {
+                    this.salesBillFiles = Array.from(e.target.files);
+                },
+                handleSalesBillDrop(e) {
+                    const files = Array.from(e.dataTransfer.files).filter(f => f.type === 'application/pdf');
+                    if (files.length) {
+                        this.salesBillFiles = files;
+                        const dt = new DataTransfer();
+                        files.forEach(f => dt.items.add(f));
+                        this.$refs.salesBillFileInput.files = dt.files;
                     }
                 },
 
@@ -773,10 +1154,10 @@
                         method: 'DELETE',
                         headers: {
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json',
+                            'Accept': 'application/json'
                         }
-                    }).then(r => r.json()).then(data => {
-                        if (data.success) window.location.reload();
+                    }).then(r => r.json()).then(d => {
+                        if (d.success) location.reload();
                         else alert('Delete failed.');
                     });
                 },
@@ -788,21 +1169,19 @@
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json',
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify({
                             record_ids: this.selectedIds,
                             merged_name: this.mergedName
                         })
-                    }).then(r => r.json()).then(data => {
-                        if (data.success) {
+                    }).then(r => r.json()).then(d => {
+                        if (d.success) {
                             this.showMergeModal = false;
                             this.selectedIds = [];
                             this.mergedName = '';
-                            window.location.reload();
-                        } else {
-                            alert('Merge failed: ' + (data.message || 'Unknown error'));
-                        }
+                            location.reload();
+                        } else alert('Merge failed: ' + (d.message || ''));
                     });
                 },
 
@@ -813,24 +1192,22 @@
                         headers: {
                             'Content-Type': 'application/json',
                             'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json',
+                            'Accept': 'application/json'
                         },
                         body: JSON.stringify({
                             record_ids: this.selectedIds,
                             merged_name: this.mergeByMonthName
                         })
-                    }).then(r => r.json()).then(data => {
-                        if (data.success) {
+                    }).then(r => r.json()).then(d => {
+                        if (d.success) {
                             this.showMergeByMonthModal = false;
                             this.selectedIds = [];
                             this.mergeByMonthName = '';
-                            window.location.reload();
-                        } else {
-                            alert('Merge by Month failed: ' + (data.message || 'Unknown error'));
-                        }
+                            location.reload();
+                        } else alert('Merge by Month failed: ' + (d.message || ''));
                     });
                 },
-            }
+            };
         }
 
         function retryPending(id) {
@@ -838,11 +1215,11 @@
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json',
+                    'Accept': 'application/json'
                 }
-            }).then(r => r.json()).then(data => {
-                if (data.success) window.location.reload();
-                else alert('Retry failed: ' + (data.message || 'Unknown error'));
+            }).then(r => r.json()).then(d => {
+                if (d.success) location.reload();
+                else alert('Retry failed: ' + (d.message || ''));
             });
         }
 
@@ -852,15 +1229,28 @@
                 method: 'DELETE',
                 headers: {
                     'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                    'Accept': 'application/json',
+                    'Accept': 'application/json'
                 }
-            }).then(r => r.json()).then(data => {
-                if (data.success) window.location.reload();
+            }).then(r => r.json()).then(d => {
+                if (d.success) location.reload();
                 else alert('Remove failed.');
             });
         }
-    </script>
 
+        function deleteSalesBill(id) {
+            if (!confirm('Delete this sales bill?')) return;
+            fetch(`/your-sales-bill/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json'
+                }
+            }).then(r => r.json()).then(d => {
+                if (d.success) location.reload();
+                else alert('Delete failed.');
+            });
+        }
+    </script>
 </body>
 
 </html>

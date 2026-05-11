@@ -6,6 +6,10 @@ use App\Http\Controllers\HostingerInvoiceController;
 use App\Http\Controllers\BankStatementController;
 use App\Http\Controllers\GodaddyReceiptController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\YourHostingerBillController;
+use App\Http\Controllers\OutsourceSalesBillController;
+use App\Http\Controllers\YourSalesBillController;
+
 
 Route::prefix('invoices')->name('invoices.')->group(function () {
     Route::get('/',          [InvoiceController::class, 'index'])->name('index');
@@ -17,6 +21,11 @@ Route::prefix('invoices')->name('invoices.')->group(function () {
     Route::delete('/pending/{pending}', [InvoiceController::class, 'destroyPending'])->name('pending.destroy');
     Route::post('/pending/{pending}/retry', [InvoiceController::class, 'retryPending'])->name('pending.retry');
     Route::get('/run-invoices-command', [InvoiceController::class, 'runCommand'])->name('run');
+});
+Route::prefix('your-sales-bill')->name('your-sales-bill.')->group(function () {
+    Route::post('upload', [YourSalesBillController::class, 'upload'])->name('upload');
+    Route::patch('{id}/client-name', [YourSalesBillController::class, 'updateClientName'])->name('updateClientName');
+    Route::delete('{id}', [YourSalesBillController::class, 'destroy'])->name('destroy');
 });
 
 Route::prefix('outsource')->name('outsource.')->group(function () {
@@ -30,6 +39,11 @@ Route::prefix('outsource')->name('outsource.')->group(function () {
     Route::post('/pending/{pending}/retry',    [OutsourceReceiptController::class, 'retryPending'])->name('pending.retry');
     Route::get('/run-outsource-command', [OutsourceReceiptController::class, 'runCommand'])->name('run');
 });
+Route::prefix('outsource-sales-bills')->name('outsource.sales-bills.')->group(function () {
+    Route::post('/upload', [OutsourceSalesBillController::class, 'upload'])->name('upload');
+    Route::patch('/{id}/client-name', [OutsourceSalesBillController::class, 'updateClientName'])->name('update-client-name');
+    Route::delete('/{id}', [OutsourceSalesBillController::class, 'destroy'])->name('destroy');
+});
 
 Route::prefix('hostinger-invoices')->name('hostinger.invoices.')->group(function () {
     Route::get('/',                                    [HostingerInvoiceController::class, 'index'])->name('index');
@@ -40,6 +54,13 @@ Route::prefix('hostinger-invoices')->name('hostinger.invoices.')->group(function
     Route::post('/pending/{pending}/retry',            [HostingerInvoiceController::class, 'retryPending'])->name('pending.retry');
     Route::patch('/{id}/client-name', [HostingerInvoiceController::class, 'updateClientName'])->name('update-client-name');
     Route::get('/run-hostinger-invoices-command', [HostingerInvoiceController::class, 'runCommand'])->name('run');
+});
+
+Route::prefix('your-hostinger-bill')->name('your-hostinger-bill.')->group(function () {
+    Route::get('/', [YourHostingerBillController::class, 'index'])->name('index');
+    Route::post('/upload', [YourHostingerBillController::class, 'upload'])->name('upload');
+    Route::patch('/{id}/client-name', [YourHostingerBillController::class, 'updateClientName'])->name('update-client-name');
+    Route::delete('/{id}', [YourHostingerBillController::class, 'destroy'])->name('destroy');
 });
 
 Route::prefix('bankstatements')->name('bankstatements.')->group(function () {

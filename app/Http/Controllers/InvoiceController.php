@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\InvoiceRecordsExport;
+use App\Models\YourSalesBill;
 use Illuminate\Support\Facades\Artisan;
 
 class InvoiceController extends Controller
@@ -30,21 +31,19 @@ class InvoiceController extends Controller
 
     public function index(Request $request)
     {
+        // ── Invoice Records (Meta Ads) ────────────────────────────────
         $query = InvoiceRecord::query();
 
         if ($request->filled('client_name')) {
             $query->where('client_name', 'like', '%' . $request->client_name . '%');
         }
-
         if ($request->filled('from_date')) {
             $query->whereDate('document_date', '>=', $request->from_date);
         }
-
         if ($request->filled('to_date')) {
             $query->whereDate('document_date', '<=', $request->to_date);
         }
 
-        // ── Filter-wise totals (before pagination) ────────────────────
         $filteredTotal       = (clone $query)->sum('price');
         $filteredGst         = round($filteredTotal * 0.18, 2);
         $filteredGrandTotal  = round($filteredTotal + $filteredGst, 2);
@@ -56,13 +55,85 @@ class InvoiceController extends Controller
             ->paginate(1500)
             ->withQueryString();
 
-        // PDF subtotals
         $subtotals = InvoiceSubtotal::orderBy('document_date', 'desc')->get();
 
-        // Pending/failed PDFs
         $pendingPdfs = PendingInvoicePdf::whereIn('status', ['pending', 'processing', 'failed'])
             ->orderBy('created_at', 'desc')
             ->get();
+
+        // ── Your Sales Bills ──────────────────────────────────────────
+        $yourBillQuery = YourSalesBill::query();
+
+        if ($request->filled('client_name')) {
+            $yourBillQuery->where('client_name', 'like', '%' . $request->client_name . '%');
+        }
+        if ($request->filled('from_date')) {
+            $yourBillQuery->whereDate('invoice_date', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $yourBillQuery->whereDate('invoice_date', '<=', $request->to_date);
+        }
+
+        $yourBills      = $yourBillQuery->orderBy('invoice_date', 'desc')->get();
+        $yourBillsTotal = $yourBills->sum('total_amount');
+
+        // ── Month + Client wise Grouped Data ──────────────────────────
+        // Key: YYYY-MM → client_name → ['meta_ads' => [...], 'your_bills' => [...]]
+        // ── Month + Client wise Grouped Data ──────────────────────────────────
+        $groupedData = [];
+
+        // Step 1: Add all meta ads records (use their name as canonical key)
+        foreach ($records as $record) {
+            $monthKey  = $record->document_date
+                ? \Carbon\Carbon::make($record->document_date)->format('Y-m')
+                : '0000-00';
+            $clientKey = strtoupper(trim($record->client_name ?? 'Unknown'));
+
+            $groupedData[$monthKey][$clientKey]['meta_ads'][]   = $record;
+            $groupedData[$monthKey][$clientKey]['your_bills'] ??= [];
+        }
+
+        // Step 2: Add your bills — fuzzy-match to existing meta ads keys
+        foreach ($yourBills as $bill) {
+            $monthKey      = $bill->invoice_date
+                ? $bill->invoice_date->format('Y-m')
+                : '0000-00';
+            $billClientKey = strtoupper(trim($bill->client_name ?? 'Unknown'));
+            $billNorm      = $this->normalizeClientName($billClientKey);
+
+            // Try to find a matching meta ads client in the same month
+            $bestMatch = null;
+            if (isset($groupedData[$monthKey])) {
+                foreach (array_keys($groupedData[$monthKey]) as $metaKey) {
+                    $metaNorm = $this->normalizeClientName($metaKey);
+                    if ($this->clientNamesMatch($billNorm, $metaNorm)) {
+                        $bestMatch = $metaKey;
+                        break;
+                    }
+                }
+            }
+
+            if ($bestMatch !== null) {
+                // Merge under the matched meta ads client key
+                $groupedData[$monthKey][$bestMatch]['your_bills'][] = $bill;
+            } else {
+                // No match found — standalone entry
+                $groupedData[$monthKey][$billClientKey]['your_bills'][] = $bill;
+                $groupedData[$monthKey][$billClientKey]['meta_ads']    ??= [];
+            }
+        }
+
+        krsort($groupedData);
+
+        // Count matched clients (have both sides)
+        $matchedCount = 0;
+        foreach ($groupedData as $clients) {
+            foreach ($clients as $data) {
+                if (!empty($data['meta_ads']) && !empty($data['your_bills'])) {
+                    $matchedCount++;
+                }
+            }
+        }
 
         return view('invoices.index', compact(
             'records',
@@ -72,8 +143,50 @@ class InvoiceController extends Controller
             'filteredGst',
             'filteredGrandTotal',
             'filteredCount',
-            'filteredImpressions'
+            'filteredImpressions',
+            'yourBills',
+            'yourBillsTotal',
+            'groupedData',
+            'matchedCount'
         ));
+    }
+
+
+    private function normalizeClientName(string $name): string
+    {
+        $name = strtoupper(trim($name));
+
+        // Remove date suffixes: "- APRIL 2026", "APRIL 2026", etc.
+        $months = 'JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER';
+        $name = preg_replace('/[\s\-]+(?:' . $months . ')\s+\d{4}.*$/i', '', $name);
+
+        // Remove legal suffixes common in Indian company names
+        $name = preg_replace(
+            '/\b(?:PRIVATE\s+LIMITED|PVT\.?\s*LTD\.?|LIMITED|LTD\.?|PVT\.?)\b/i',
+            '',
+            $name
+        );
+
+        // Normalize punctuation and spaces
+        $name = preg_replace('/[^\w\s]/', ' ', $name);
+        $name = preg_replace('/\s+/', ' ', $name);
+
+        return trim($name);
+    }
+
+    private function clientNamesMatch(string $a, string $b): bool
+    {
+        if ($a === $b) return true;
+
+        // One is a prefix of the other
+        if (str_starts_with($a, $b) || str_starts_with($b, $a)) return true;
+
+        // One is fully contained in the other
+        if (str_contains($a, $b) || str_contains($b, $a)) return true;
+
+        // Fallback: percentage similarity
+        similar_text($a, $b, $percent);
+        return $percent >= 75;
     }
 
     // ══════════════════════════════════════════════════════════════════

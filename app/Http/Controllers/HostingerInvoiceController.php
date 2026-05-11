@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\HostingerInvoiceRecordsExport;
+use App\Models\YourHostingerBill;
 use Illuminate\Support\Facades\Artisan;
 
 class HostingerInvoiceController extends Controller
@@ -28,6 +29,7 @@ class HostingerInvoiceController extends Controller
 
     public function index(Request $request)
     {
+        // ==================== HOSTINGER RECORDS QUERY ====================
         $query = HostingerInvoiceRecord::query();
 
         if ($request->filled('invoice_number')) {
@@ -37,16 +39,19 @@ class HostingerInvoiceController extends Controller
         if ($request->filled('billed_to')) {
             $query->where(function ($q) use ($request) {
                 $q->where('billed_to_name', 'like', '%' . $request->billed_to . '%')
-                    ->orWhere('billed_to_company', 'like', '%' . $request->billed_to . '%');
+                    ->orWhere('billed_to_company', 'like', '%' . $request->billed_to . '%')
+                    ->orWhere('client_name', 'like', '%' . $request->billed_to . '%');
             });
         }
 
         if ($request->filled('description')) {
             $query->where('description', 'like', '%' . $request->description . '%');
         }
+
         if ($request->filled('type')) {
             $query->where('type', $request->type);
         }
+
         if ($request->filled('from_date')) {
             $query->whereDate('invoice_date', '>=', $request->from_date);
         }
@@ -55,52 +60,114 @@ class HostingerInvoiceController extends Controller
             $query->whereDate('invoice_date', '<=', $request->to_date);
         }
 
-        // ── Filter-wise totals split by currency ────────────────────────
+        // TOTALS FOR HOSTINGER
         $inrQuery = (clone $query)->where('currency', 'INR');
         $usdQuery = (clone $query)->where('currency', '!=', 'INR');
 
-        $filteredCount = (clone $query)->count();
-
-        // INR totals
         $inrSubtotal   = (clone $inrQuery)->sum('total_excl_gst');
         $inrDiscount   = (clone $inrQuery)->sum('discount');
         $inrGst        = (clone $inrQuery)->sum('gst_amount');
         $inrGrandTotal = (clone $inrQuery)->sum('line_total');
         $inrCount      = (clone $inrQuery)->count();
 
-        // USD totals (all non-INR currencies shown as USD column)
         $usdSubtotal   = (clone $usdQuery)->sum('total_excl_gst');
         $usdDiscount   = (clone $usdQuery)->sum('discount');
         $usdGst        = (clone $usdQuery)->sum('gst_amount');
         $usdGrandTotal = (clone $usdQuery)->sum('line_total');
         $usdCount      = (clone $usdQuery)->count();
-        $records = $query
-            ->orderBy('currency', 'asc')      // pehle currency wise
-            ->orderBy('invoice_date', 'asc') // phir date wise
-            ->orderBy('invoice_number', 'asc') // optional
-            ->paginate(500)
+
+        // Paginated Records
+        $records = $query->orderBy('invoice_date', 'desc')
+            ->orderBy('id', 'desc')
+            ->paginate(100)
             ->withQueryString();
 
-        $summaries   = HostingerInvoiceSummary::orderBy('invoice_date', 'desc')->get();
+        // YOUR BILLS QUERY
+        $yourBillQuery = YourHostingerBill::query();
+
+        if ($request->filled('billed_to')) {
+            $yourBillQuery->where('client_name', 'like', '%' . $request->billed_to . '%');
+        }
+
+        if ($request->filled('invoice_number')) {
+            $yourBillQuery->where('invoice_number', 'like', '%' . $request->invoice_number . '%');
+        }
+
+        if ($request->filled('from_date')) {
+            $yourBillQuery->whereDate('invoice_date', '>=', $request->from_date);
+        }
+
+        if ($request->filled('to_date')) {
+            $yourBillQuery->whereDate('invoice_date', '<=', $request->to_date);
+        }
+
+        $yourBills = $yourBillQuery->orderBy('invoice_date', 'desc')->get();
+        $grandTotal = $yourBills->sum('total_amount');
+
+        // GROUPED DATA (Month + Client Wise)
+        $groupedData = [];
+
+        foreach ($records as $record) {
+            $monthKey = $record->invoice_date ? $record->invoice_date->format('Y-m') : '0000-00';
+            $clientKey = strtoupper(trim($record->client_name ?? $record->billed_to_name ?? $record->billed_to_company ?? 'Unknown'));
+
+            if (!isset($groupedData[$monthKey])) {
+                $groupedData[$monthKey] = [];
+            }
+            if (!isset($groupedData[$monthKey][$clientKey])) {
+                $groupedData[$monthKey][$clientKey] = ['hostinger' => [], 'your_bills' => []];
+            }
+
+            $groupedData[$monthKey][$clientKey]['hostinger'][] = $record;
+        }
+
+        foreach ($yourBills as $bill) {
+            $monthKey = $bill->invoice_date ? $bill->invoice_date->format('Y-m') : '0000-00';
+            $clientKey = strtoupper(trim($bill->client_name ?? 'Unknown'));
+
+            if (!isset($groupedData[$monthKey])) {
+                $groupedData[$monthKey] = [];
+            }
+            if (!isset($groupedData[$monthKey][$clientKey])) {
+                $groupedData[$monthKey][$clientKey] = ['hostinger' => [], 'your_bills' => []];
+            }
+
+            $groupedData[$monthKey][$clientKey]['your_bills'][] = $bill;
+        }
+
+        krsort($groupedData);
+
+        // Count Matched Clients
+        $matchedCount = 0;
+        foreach ($groupedData as $clients) {
+            foreach ($clients as $data) {
+                if (!empty($data['hostinger']) && !empty($data['your_bills'])) {
+                    $matchedCount++;
+                }
+            }
+        }
+
+        // Pending PDFs
         $pendingPdfs = HostingerPendingPdf::whereIn('status', ['pending', 'processing', 'failed'])
             ->orderBy('created_at', 'desc')
             ->get();
 
         return view('hostinger.index', compact(
             'records',
-            'summaries',
+            'groupedData',
             'pendingPdfs',
-            'filteredCount',
+            'inrGrandTotal',
+            'usdGrandTotal',
+            'inrCount',
+            'usdCount',
             'inrSubtotal',
             'inrDiscount',
             'inrGst',
-            'inrGrandTotal',
-            'inrCount',
             'usdSubtotal',
             'usdDiscount',
             'usdGst',
-            'usdGrandTotal',
-            'usdCount'
+            'grandTotal',
+            'matchedCount'
         ));
     }
 
