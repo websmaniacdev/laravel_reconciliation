@@ -27,48 +27,106 @@ class GodaddyReceiptController extends Controller
 
     public function index(Request $request)
     {
+        // ── GoDaddy Receipts (what YOU paid GoDaddy) ──────────────────
         $query = GodaddyReceipt::query();
 
         if ($request->filled('domain_name')) {
             $query->where('domain_name', 'like', '%' . $request->domain_name . '%');
         }
-
         if ($request->filled('product_name')) {
             $query->where('product_name', 'like', '%' . $request->product_name . '%');
         }
-
         if ($request->filled('from_date')) {
             $query->whereDate('order_date', '>=', $request->from_date);
         }
-
         if ($request->filled('to_date')) {
             $query->whereDate('order_date', '<=', $request->to_date);
         }
-
         if ($request->filled('payment_category')) {
             $query->where('payment_category', $request->payment_category);
         }
 
-        // ── Summary totals ────────────────────────────────────────────
         $filteredSubtotal   = (clone $query)->sum('subtotal');
         $filteredIcann      = (clone $query)->sum('icann_fee');
         $filteredTax        = (clone $query)->sum('tax_amount');
         $filteredOrderTotal = (clone $query)->sum('order_total');
         $filteredCount      = (clone $query)->count();
 
-        $records = $query
-            ->orderBy('order_date', 'desc')
-            ->paginate(500)
-            ->withQueryString();
+        $records = $query->orderBy('order_date', 'desc')->paginate(500)->withQueryString();
 
         $paymentCategories = GodaddyReceipt::select('payment_category')
-            ->distinct()
-            ->whereNotNull('payment_category')
-            ->pluck('payment_category');
+            ->distinct()->whereNotNull('payment_category')->pluck('payment_category');
 
         $pendingFiles = PendingGodaddyFile::whereIn('status', ['pending', 'processing', 'failed'])
-            ->orderBy('created_at', 'desc')
-            ->get();
+            ->orderBy('created_at', 'desc')->get();
+
+        // ── Your GoDaddy Bills (what you CHARGED clients) ─────────────
+        $yourBillQuery = \App\Models\YourGodaddyBill::query();
+
+        if ($request->filled('domain_name')) {
+            $yourBillQuery->where('domain_name', 'like', '%' . $request->domain_name . '%');
+        }
+        if ($request->filled('from_date')) {
+            $yourBillQuery->whereDate('invoice_date', '>=', $request->from_date);
+        }
+        if ($request->filled('to_date')) {
+            $yourBillQuery->whereDate('invoice_date', '<=', $request->to_date);
+        }
+
+        $yourBills      = $yourBillQuery->orderBy('invoice_date', 'desc')->get();
+        $yourBillsTotal = $yourBills->sum('total_amount');
+
+        // ── Domain + Month wise Grouped Comparison ────────────────────
+        // Key: YYYY-MM → domain → ['receipts' => [...], 'your_bills' => [...]]
+        $groupedData = [];
+
+        // Step 1: GoDaddy receipts keyed by month → domain
+        foreach ($records as $record) {
+            $monthKey  = $record->order_date
+                ? $record->order_date->format('Y-m')
+                : '0000-00';
+            $domainKey = strtolower(trim($record->domain_name ?? 'unknown'));
+
+            $groupedData[$monthKey][$domainKey]['receipts'][]   = $record;
+            $groupedData[$monthKey][$domainKey]['your_bills'] ??= [];
+        }
+
+        // Step 2: Your bills — match by domain name (fuzzy)
+        foreach ($yourBills as $bill) {
+            $monthKey  = $bill->invoice_date
+                ? $bill->invoice_date->format('Y-m')
+                : '0000-00';
+            $billDomain = strtolower(trim($bill->domain_name ?? 'unknown'));
+
+            // Try to find matching domain in receipts for this month
+            $bestMatch = null;
+            if (isset($groupedData[$monthKey])) {
+                foreach (array_keys($groupedData[$monthKey]) as $receiptDomain) {
+                    if ($this->domainsMatch($billDomain, $receiptDomain)) {
+                        $bestMatch = $receiptDomain;
+                        break;
+                    }
+                }
+            }
+
+            if ($bestMatch !== null) {
+                $groupedData[$monthKey][$bestMatch]['your_bills'][] = $bill;
+            } else {
+                $groupedData[$monthKey][$billDomain]['your_bills'][] = $bill;
+                $groupedData[$monthKey][$billDomain]['receipts']    ??= [];
+            }
+        }
+
+        krsort($groupedData);
+
+        $matchedCount = 0;
+        foreach ($groupedData as $domains) {
+            foreach ($domains as $data) {
+                if (!empty($data['receipts']) && !empty($data['your_bills'])) {
+                    $matchedCount++;
+                }
+            }
+        }
 
         return view('godaddy.index', compact(
             'records',
@@ -78,8 +136,32 @@ class GodaddyReceiptController extends Controller
             'filteredIcann',
             'filteredTax',
             'filteredOrderTotal',
-            'filteredCount'
+            'filteredCount',
+            'yourBills',
+            'yourBillsTotal',
+            'groupedData',
+            'matchedCount'
         ));
+    }
+
+    // ── Domain fuzzy matcher ───────────────────────────────────────────
+    private function domainsMatch(string $a, string $b): bool
+    {
+        // Strip www prefix
+        $a = preg_replace('/^www\./', '', $a);
+        $b = preg_replace('/^www\./', '', $b);
+
+        if ($a === $b) return true;
+
+        // One contains the other (handles subdomain cases)
+        if (str_contains($a, $b) || str_contains($b, $a)) return true;
+
+        // Compare base domain without TLD as last resort
+        $baseA = explode('.', $a)[0];
+        $baseB = explode('.', $b)[0];
+        if (strlen($baseA) > 3 && strlen($baseB) > 3 && $baseA === $baseB) return true;
+
+        return false;
     }
 
     // ══════════════════════════════════════════════════════════════════

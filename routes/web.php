@@ -9,6 +9,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\YourHostingerBillController;
 use App\Http\Controllers\OutsourceSalesBillController;
 use App\Http\Controllers\YourSalesBillController;
+use App\Http\Controllers\YourGodaddyBillController;
+
 
 
 Route::prefix('invoices')->name('invoices.')->group(function () {
@@ -83,4 +85,10 @@ Route::prefix('godaddy')->name('godaddy.')->group(function () {
     Route::delete('/pending/{pending}',       [GodaddyReceiptController::class, 'destroyPending'])->name('pending.destroy');
     Route::post('/pending/{pending}/retry',   [GodaddyReceiptController::class, 'retryPending'])->name('pending.retry');
     Route::get('/run-godaddy-command', [GodaddyReceiptController::class, 'runCommand'])->name('run');
+});
+Route::prefix('your-godaddy-bill')->name('your-godaddy-bill.')->group(function () {
+    Route::get('/',          [YourGodaddyBillController::class, 'index'])->name('index');
+    Route::post('/upload',   [YourGodaddyBillController::class, 'upload'])->name('upload');
+    Route::delete('/{id}',   [YourGodaddyBillController::class, 'destroy'])->name('destroy');
+    Route::patch('/{id}/client-name', [YourGodaddyBillController::class, 'updateClientName'])->name('updateClientName');
 });
